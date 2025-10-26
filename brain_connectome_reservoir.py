@@ -130,21 +130,7 @@ class ConnectomeReservoir:
             self.x = x0
         return self.x
 
-    def step(self, u_t: np.ndarray) -> np.ndarray:
-        #advance the reservoir by one time step with input u_t (shape [n_inputs], 1D).
-        if not hasattr(self, "x"):
-            self.reset_state()
-
-        u_t = np.asarray(u_t, dtype=np.float32).reshape(-1)
-        if u_t.shape[0] != self.n_inputs:
-            raise ValueError(f"u_t has {u_t.shape[0]} dims; expected {self.n_inputs}")
-
-        pre = self.W @ self.x + self.Win @ u_t
-        x_new = (1.0 - self.leak) * self.x + self.leak * np.tanh(pre)
-        self.x = x_new
-        return self.x
-
-    def forward(self, u, collect_states, wout=None):
+    def forward(self, u, collect_states=False, wout=None):
         #run reservoir forward in time
 
         U = np.asarray(u, dtype=np.float32)
@@ -197,13 +183,6 @@ class ConnectomeReservoir:
             return X
         else:
             return None
-
-
-    def predict(self, U: np.ndarray, Wout: np.ndarray, washout: int = 0, add_bias: bool = True) -> np.ndarray:
-        X = self.forward(U, washout=washout, add_bias=add_bias, retain_state=False, return_states=False)
-        y = X @ Wout
-        return y.squeeze()
-    
     
     # helpers / internals
     def _resize_adjacency(self, A: np.ndarray, k: int) -> np.ndarray:
