@@ -1,0 +1,141 @@
+
+================================================================================
+🔍 SLITHER.IO ESN - HYPERPARAMETER SEARCH
+================================================================================
+
+📁 Caricamento dati da: /Users/nick/Desktop/SSN-Folder/ESN-unofficial/data
+
+Found 6 session(s) in /Users/nick/Desktop/SSN-Folder/ESN-unofficial/data
+
+Loading session 1/6: session_1761510848309
+  ✓ Loaded: 14206 frames, user: Riccardo
+
+Loading session 2/6: session_1761579286757
+  ✓ Loaded: 12198 frames, user: Riccardo
+
+Loading session 3/6: session_1759343160564
+  ✓ Loaded: 1764 frames, user: nick
+
+Loading session 4/6: session_1761515380508
+  ✓ Loaded: 19306 frames, user: nick
+
+Loading session 5/6: session_1761580281379
+  Skipping session_1761580281379: only 0 frames (min: 100)
+
+Loading session 6/6: session_1761580309746
+  ✓ Loaded: 1166 frames, user: nick
+
+✓ Successfully loaded 5 session(s)
+  Total frames: 48640
+
+🎯 Preparazione 5 sessioni per cross-validation...
+   ✓ Total sessions: 5
+   ✓ Input dimension: 6148
+   ✓ Total frames: 48640
+
+⚡ QUICK MODE: Usando parametri ridotti per test veloce
+
+🔍 HYPERPARAMETER SEARCH
+   Parametri da testare:
+   - Alpha: [0.001, 0.01, 0.1]
+   - N_reservoir: [500, 1000]
+   - Washout: [50, 75]
+   - Spectral radius: [1.0, 1.25]
+   - Leak range: (0.1, 0.3)
+
+   Totale combinazioni: 24
+   Cross-validation folds: 3
+   Tempo stimato: 48-120 secondi
+
+================================================================================
+
+[1/24] Testing: alpha=1e-03, N=500, washout=50, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[2/24] Testing: alpha=1e-03, N=500, washout=50, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[3/24] Testing: alpha=1e-03, N=500, washout=75, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[4/24] Testing: alpha=1e-03, N=500, washout=75, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[5/24] Testing: alpha=1e-03, N=1000, washout=50, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[6/24] Testing: alpha=1e-03, N=1000, washout=50, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[7/24] Testing: alpha=1e-03, N=1000, washout=75, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[8/24] Testing: alpha=1e-03, N=1000, washout=75, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[9/24] Testing: alpha=1e-02, N=500, washout=50, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[10/24] Testing: alpha=1e-02, N=500, washout=50, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[11/24] Testing: alpha=1e-02, N=500, washout=75, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[12/24] Testing: alpha=1e-02, N=500, washout=75, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[13/24] Testing: alpha=1e-02, N=1000, washout=50, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[14/24] Testing: alpha=1e-02, N=1000, washout=50, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[15/24] Testing: alpha=1e-02, N=1000, washout=75, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[16/24] Testing: alpha=1e-02, N=1000, washout=75, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[17/24] Testing: alpha=1e-01, N=500, washout=50, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[18/24] Testing: alpha=1e-01, N=500, washout=50, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[19/24] Testing: alpha=1e-01, N=500, washout=75, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[20/24] Testing: alpha=1e-01, N=500, washout=75, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[21/24] Testing: alpha=1e-01, N=1000, washout=50, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[22/24] Testing: alpha=1e-01, N=1000, washout=50, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[23/24] Testing: alpha=1e-01, N=1000, washout=75, rho=1.0
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+[24/24] Testing: alpha=1e-01, N=1000, washout=75, rho=1.25
+   ❌ Error: too many indices for array: array is 1-dimensional, but 2 were indexed
+
+================================================================================
+✅ SEARCH COMPLETATO in 2416 secondi (40.3 minuti)
+
+🏆 MIGLIOR CONFIGURAZIONE:
+Traceback (most recent call last):
+  File "/Users/nick/Desktop/SSN-Folder/ESN-unofficial/hyperparameter_search.py", line 511, in <module>
+    n_inputs = X_list[0].shape[1]
+             ^^^^^^
+  File "/Users/nick/Desktop/SSN-Folder/ESN-unofficial/hyperparameter_search.py", line 482, in main
+    
+    
+    ...<5 lines>...
+        parser.add_argument('--quick', action='store_true', help="Quick mode: fewer combinations")
+        ^
+  File "/Users/nick/Desktop/SSN-Folder/ESN-unofficial/hyperparameter_search.py", line 358, in hyperparameter_search
+    result = {
+    
+TypeError: 'NoneType' object is not subscriptable

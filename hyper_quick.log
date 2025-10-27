@@ -1,0 +1,130 @@
+
+================================================================================
+🔍 SLITHER.IO ESN - HYPERPARAMETER SEARCH
+================================================================================
+
+📁 Caricamento dati da: /Users/nick/Desktop/SSN-Folder/ESN-unofficial/data
+
+Found 3 session(s) in /Users/nick/Desktop/SSN-Folder/ESN-unofficial/data
+
+Loading session 1/3: session_1761510848309
+  ✓ Loaded: 14206 frames, user: Riccardo
+
+Loading session 2/3: session_1759343160564
+  ✓ Loaded: 1764 frames, user: nick
+
+Loading session 3/3: session_1761515380508
+  ✓ Loaded: 14104 frames, user: nick
+
+✓ Successfully loaded 3 session(s)
+  Total frames: 30074
+
+🎯 Concatenazione 3 sessioni...
+   ✓ Total samples: 30074
+   ✓ X shape: (30074, 6148)
+   ✓ Y shape: (30074, 3)
+
+⚡ QUICK MODE: Usando parametri ridotti per test veloce
+
+🔍 HYPERPARAMETER SEARCH
+   Parametri da testare:
+   - Alpha: [0.001, 0.01, 0.1]
+   - N_reservoir: [500, 1000]
+   - Washout: [50, 75]
+   - Spectral radius: [1.0, 1.25]
+   - Leak range: (0.1, 0.3)
+
+   Totale combinazioni: 24
+   Cross-validation folds: 3
+   Tempo stimato: 48-120 secondi
+
+================================================================================
+
+[1/24] Testing: alpha=1e-03, N=500, washout=50, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[2/24] Testing: alpha=1e-03, N=500, washout=50, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[3/24] Testing: alpha=1e-03, N=500, washout=75, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[4/24] Testing: alpha=1e-03, N=500, washout=75, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[5/24] Testing: alpha=1e-03, N=1000, washout=50, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[6/24] Testing: alpha=1e-03, N=1000, washout=50, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[7/24] Testing: alpha=1e-03, N=1000, washout=75, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[8/24] Testing: alpha=1e-03, N=1000, washout=75, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[9/24] Testing: alpha=1e-02, N=500, washout=50, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[10/24] Testing: alpha=1e-02, N=500, washout=50, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[11/24] Testing: alpha=1e-02, N=500, washout=75, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[12/24] Testing: alpha=1e-02, N=500, washout=75, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[13/24] Testing: alpha=1e-02, N=1000, washout=50, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[14/24] Testing: alpha=1e-02, N=1000, washout=50, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[15/24] Testing: alpha=1e-02, N=1000, washout=75, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[16/24] Testing: alpha=1e-02, N=1000, washout=75, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[17/24] Testing: alpha=1e-01, N=500, washout=50, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[18/24] Testing: alpha=1e-01, N=500, washout=50, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[19/24] Testing: alpha=1e-01, N=500, washout=75, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[20/24] Testing: alpha=1e-01, N=500, washout=75, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[21/24] Testing: alpha=1e-01, N=1000, washout=50, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[22/24] Testing: alpha=1e-01, N=1000, washout=50, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[23/24] Testing: alpha=1e-01, N=1000, washout=75, rho=1.0
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+[24/24] Testing: alpha=1e-01, N=1000, washout=75, rho=1.25
+   ❌ Error: index -1 is out of bounds for axis 0 with size 0
+
+================================================================================
+✅ SEARCH COMPLETATO in 560 secondi (9.3 minuti)
+
+🏆 MIGLIOR CONFIGURAZIONE:
+Traceback (most recent call last):
+  File "/Users/nick/Desktop/SSN-Folder/ESN-unofficial/hyperparameter_search.py", line 480, in <module>
+  File "/Users/nick/Desktop/SSN-Folder/ESN-unofficial/hyperparameter_search.py", line 451, in main
+    parser.add_argument('--quick', action='store_true', help="Quick mode: fewer combinations")
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    print("\n" + "="*80)
+    ^
+  File "/Users/nick/Desktop/SSN-Folder/ESN-unofficial/hyperparameter_search.py", line 323, in hyperparameter_search
+    'metrics': metrics
+           ^^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable

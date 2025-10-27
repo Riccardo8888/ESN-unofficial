@@ -34,7 +34,7 @@ OUTPUT_DIM = 3         # mx (direction x), my (direction y), boost (0/1)
 # PREDICTION PARAMETERS
 # ===========================================
 # Number of frames to predict into the future
-PREDICTION_HORIZON = 5  # At frame t, predict player actions at frame t+5
+PREDICTION_HORIZON = 3  # At frame t, predict player actions at frame t+5
 
 # Minimum frames per session to be considered valid
 MIN_FRAMES_PER_SESSION = 100

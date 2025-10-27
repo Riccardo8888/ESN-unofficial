@@ -1,0 +1,13 @@
+{
+    "frames_written": 13601,
+    "last_update": 1761583624.0301812,
+    "session_id": "1761582241261",
+    "start_time": 1761582241.466104,
+    "stats": {
+        "avg_velocity": 275.8063768264475,
+        "boost_time": 571.6308000002541,
+        "game_radius": 21600,
+        "total_enemies_seen": 9451013,
+        "total_food_seen": 9301367
+    }
+}
