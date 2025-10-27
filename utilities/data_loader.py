@@ -152,12 +152,34 @@ def prepare_features(session_data: Dict[str, np.ndarray]) -> np.ndarray:
         heading_cos = np.cos(heading)
         features.extend([heading_sin, heading_cos])
     
+    # Add angular velocity if enabled (rate of heading change)
+    if USE_ANGULAR_VELOCITY:
+        heading = session_data['headings']
+        # Calcola differenza con wrapping circolare
+        angular_vel = np.diff(heading, prepend=heading[0])
+        # Wrap to [-π, π]
+        angular_vel = np.arctan2(np.sin(angular_vel), np.cos(angular_vel))
+        # Normalize to [-1, 1] (typical max angular velocity is ~π rad/frame)
+        angular_vel = angular_vel / np.pi
+        features.append(angular_vel.reshape(-1, 1))
+    
     # Add distance to border if enabled
     if USE_DISTANCE_TO_BORDER:
         distance = session_data['distances_to_border'].reshape(-1, 1)
         # Normalize distance (typical game radius is 21600)
         distance = distance / 21600.0
         features.append(distance)
+    
+    # Add distance velocity if enabled (rate of distance change)
+    if USE_DISTANCE_VELOCITY:
+        distance = session_data['distances_to_border']
+        # Calcola velocità di avvicinamento/allontanamento dal bordo
+        distance_vel = np.diff(distance, prepend=distance[0])
+        # Normalize (typical max change is ~200 units/frame)
+        distance_vel = distance_vel / 200.0
+        # Clip to reasonable range
+        distance_vel = np.clip(distance_vel, -1.0, 1.0)
+        features.append(distance_vel.reshape(-1, 1))
     
     # Concatenate all features
     X = np.concatenate(features, axis=1)

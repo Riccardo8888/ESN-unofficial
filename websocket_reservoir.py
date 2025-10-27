@@ -48,6 +48,12 @@ class ESNControlServer:
         self.model_path = model_path
         self.active_connection = None
         
+        # History for temporal derivatives (previous frame values)
+        self.previous_frame = {
+            'heading': None,
+            'distanceToBorder': None
+        }
+        
         # Load model
         print("\n" + "=" * 60)
         print("LOADING ESN MODEL")
@@ -136,9 +142,38 @@ class ESNControlServer:
             features_list.append([metadata['headingSin']])
             features_list.append([metadata['headingCos']])
         
+        # Add angular velocity if model expects it
+        if USE_ANGULAR_VELOCITY:
+            current_heading = metadata['heading']
+            if self.previous_frame['heading'] is not None:
+                # Calcola cambio angolare con wrapping
+                angular_vel = current_heading - self.previous_frame['heading']
+                angular_vel = np.arctan2(np.sin(angular_vel), np.cos(angular_vel))
+                # Normalize
+                angular_vel = angular_vel / np.pi
+            else:
+                angular_vel = 0.0  # First frame
+            features_list.append([angular_vel])
+        
         # Add distance to border if model expects it
         if USE_DISTANCE_TO_BORDER:
             features_list.append([metadata['distanceToBorder'] / 21600.0])  # normalized
+        
+        # Add distance velocity if model expects it
+        if USE_DISTANCE_VELOCITY:
+            current_distance = metadata['distanceToBorder']
+            if self.previous_frame['distanceToBorder'] is not None:
+                # Calcola variazione distanza dal bordo
+                distance_vel = current_distance - self.previous_frame['distanceToBorder']
+                # Normalize and clip
+                distance_vel = np.clip(distance_vel / 200.0, -1.0, 1.0)
+            else:
+                distance_vel = 0.0  # First frame
+            features_list.append([distance_vel])
+        
+        # Update previous frame values for next iteration
+        self.previous_frame['heading'] = metadata['heading']
+        self.previous_frame['distanceToBorder'] = metadata['distanceToBorder']
         
         # NOTE: snake_length is NOT included in the current model
         # This matches the data_loader.py logic which doesn't add snake_length
@@ -201,6 +236,14 @@ class ESNControlServer:
         # Normalize to [-π, π]
         angle_delta = np.arctan2(np.sin(angle_delta), np.cos(angle_delta))
         
+        # CLAMP angle delta to prevent extreme turns (max ±45° per frame)
+        MAX_ANGLE_DELTA = np.radians(45)  # ±45° max
+        if abs(angle_delta) > MAX_ANGLE_DELTA:
+            angle_delta = np.sign(angle_delta) * MAX_ANGLE_DELTA
+            # Log when clamping happens
+            if self.stats['frames_processed'] % 10 == 0:
+                print(f"⚠️  Clamped large angleDelta from {np.degrees(predicted_angle - current_heading):.1f}° to {np.degrees(angle_delta):.1f}°")
+        
         # Boost decision (LOWERED threshold to 0.45 due to model bias)
         boost_decision = (boost_prob > 0.45)
         
@@ -228,6 +271,12 @@ class ESNControlServer:
         
         # Parse frame
         frame_data = json.loads(message)
+        
+        # Log incoming frame info
+        current_heading_rad = frame_data['metadata']['heading']
+        current_heading_deg = np.degrees(current_heading_rad)
+        frame_idx = frame_data.get('frameIndex', '?')
+        print(f"\n📥 Frame {frame_idx} | Current heading: {current_heading_deg:+7.2f}° ({current_heading_rad:.3f} rad)")
         
         # Prepare features
         features = self.prepare_features(frame_data)
@@ -261,18 +310,24 @@ class ESNControlServer:
         self.stats['frames_processed'] += 1
         self.stats['total_inference_time'] += processing_time
         
-        # Log real-time command (every frame)
-        angle_deg = np.degrees(command['angleDelta'])
-        boost_str = "true" if command['boost'] else "false"
-        print(f"{angle_deg:+7.2f}° - BOOST {boost_str}")
+        # Log real-time command (every frame) with context
+        angle_delta_deg = np.degrees(command['angleDelta'])
+        predicted_angle_deg = np.degrees(command['predictedAngle'])
+        boost_str = "true " if command['boost'] else "false"
+        
+        print(f"📤 Predicted: {predicted_angle_deg:+7.2f}° | "
+              f"Delta: {angle_delta_deg:+7.2f}° | "
+              f"BOOST {boost_str} | "
+              f"Conf: {command['confidence']:.2f} | "
+              f"mx: {mx_pred:+.3f}, my: {my_pred:+.3f}")
         
         # Log statistics every 50 frames
         if self.stats['frames_processed'] % 50 == 0:
             avg_time = self.stats['total_inference_time'] / self.stats['frames_processed']
             fps = 1.0 / avg_time if avg_time > 0 else 0
-            print(f"📊 Processed {self.stats['frames_processed']} frames | "
+            print(f"\n📊 Processed {self.stats['frames_processed']} frames | "
                   f"Avg inference: {avg_time*1000:.2f}ms | "
-                  f"Max FPS: {fps:.1f}")
+                  f"Max FPS: {fps:.1f}\n")
         
         return json.dumps(response)
     

@@ -1,24 +1,24 @@
 {
-    "end_time": 1761594223.915929,
-    "errors": 0,
+    "end_time": 1761602085.215909,
+    "errors": 2,
     "final_stats": {
-        "avg_velocity": 265.0929518617499,
-        "boost_time": 17.983599999994055,
+        "avg_velocity": 362.1309727125077,
+        "boost_time": 367.22450000002806,
         "game_radius": 21600,
-        "total_enemies_seen": 224564,
-        "total_food_seen": 209339
+        "total_enemies_seen": 4953075,
+        "total_food_seen": 5266765
     },
-    "frame_count": 341,
-    "frames_written": 38839,
-    "last_update": 1761594223.913547,
+    "frame_count": 5128,
+    "frames_written": 44655,
+    "last_update": 1761602085.214026,
     "session_id": "1761580309746",
     "start_time": 1761580309.853665,
     "stats": {
-        "avg_velocity": 265.0929518617499,
-        "boost_time": 17.983599999994055,
+        "avg_velocity": 362.1309727125077,
+        "boost_time": 367.22450000002806,
         "game_radius": 21600,
-        "total_enemies_seen": 224564,
-        "total_food_seen": 209339
+        "total_enemies_seen": 4953075,
+        "total_food_seen": 5266765
     },
-    "valid_frames": 341
+    "valid_frames": 5128
 }

@@ -304,6 +304,14 @@ def main():
     model_path = output_dir / "reservoir_model.npz"
     np.savez(model_path, **reservoir_data)
     
+    # Save training statistics for fine-tuning (after washout)
+    X_train_clean = X_train_states[WASHOUT:]
+    y_train_clean = y_train_cat[WASHOUT:]
+    R = X_train_clean.T @ X_train_clean
+    P = X_train_clean.T @ y_train_clean
+    stats_path = output_dir / "training_stats.npz"
+    np.savez(stats_path, R=R, P=P)
+    
     # Save metrics
     results = {
         'timestamp': timestamp,
