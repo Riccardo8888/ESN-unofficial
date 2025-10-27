@@ -1,0 +1,33 @@
+================================================================================
+HYPERPARAMETER SEARCH RESULTS
+================================================================================
+
+Best Configuration:
+  Alpha: 1e-02
+  N_reservoir: 500
+  Washout: 50
+  Spectral radius: 1.0
+  Leak range: (0.1, 0.3)
+
+Top 10 Configurations:
+--------------------------------------------------------------------------------
+1. Score=0.4852 | Val Acc=59.80% | MSE ratio=1.58
+   alpha=1e-02, N=500, wash=50, rho=1.0
+2. Score=0.4769 | Val Acc=59.31% | MSE ratio=1.51
+   alpha=1e-01, N=500, wash=50, rho=1.25
+3. Score=0.4758 | Val Acc=59.22% | MSE ratio=1.54
+   alpha=1e-02, N=500, wash=75, rho=1.0
+4. Score=0.4637 | Val Acc=58.32% | MSE ratio=1.54
+   alpha=1e-01, N=500, wash=75, rho=1.25
+5. Score=0.4628 | Val Acc=58.44% | MSE ratio=1.53
+   alpha=1e-01, N=500, wash=75, rho=1.0
+6. Score=0.4556 | Val Acc=58.09% | MSE ratio=1.50
+   alpha=1e-03, N=500, wash=75, rho=1.25
+7. Score=0.4518 | Val Acc=57.63% | MSE ratio=1.57
+   alpha=1e-02, N=500, wash=50, rho=1.25
+8. Score=0.4490 | Val Acc=58.92% | MSE ratio=2.45
+   alpha=1e-02, N=1000, wash=50, rho=1.25
+9. Score=0.4452 | Val Acc=57.21% | MSE ratio=1.54
+   alpha=1e-03, N=500, wash=50, rho=1.0
+10. Score=0.4432 | Val Acc=56.90% | MSE ratio=1.60
+   alpha=1e-01, N=500, wash=50, rho=1.0

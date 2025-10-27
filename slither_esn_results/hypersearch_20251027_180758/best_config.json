@@ -1,0 +1,10 @@
+{
+  "alpha": 0.01,
+  "n_reservoir": 500,
+  "washout": 50,
+  "spectral_radius": 1.0,
+  "leak_range": [
+    0.1,
+    0.3
+  ]
+}
