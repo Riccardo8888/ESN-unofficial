@@ -64,57 +64,62 @@ def train_random_reservoir(
         verbose=False
     )
     
-    # Collect training states
-    all_states = []
-    all_targets = []
+    # Collect training states - X_train is already concatenated [n_frames, features]
+    if verbose:
+        print(f"\n📊 Collecting reservoir states...")
+        print(f"   Training data: {X_train.shape}")
     
-    for i in range(len(X_train)):
-        X_seq = reservoir.forward(X_train[i], collect_states=True)
-        X_seq = X_seq[config['washout']:]
-        Y_seq = np.repeat(Y_train[i:i+1], len(X_seq), axis=0)
-        all_states.append(X_seq)
-        all_targets.append(Y_seq)
+    X_train_states = reservoir.forward(X_train, collect_states=True)
     
-    X_train_states = np.vstack(all_states)
-    Y_train_targets = np.vstack(all_targets)
+    # Apply washout
+    X_train_states = X_train_states[config['washout']:]
+    Y_train_targets = Y_train[config['washout']:]
+    
+    if verbose:
+        print(f"   ✓ States collected: {X_train_states.shape}")
+        print(f"   ✓ After washout: {X_train_states.shape[0]} frames")
     
     # Train
+    if verbose:
+        print(f"\n🎓 Training output weights (Ridge regression, alpha={config['alpha']})...")
+    
     wout = compute_wout(X_train_states, Y_train_targets, alpha=config['alpha'])
     
     train_time = time.time() - start_time
     
-    # Evaluate
-    train_preds, train_targets = [], []
-    for i in range(len(X_train)):
-        X_seq = reservoir.forward(X_train[i], collect_states=True)
-        if len(X_seq) <= config['washout']:
-            continue
-        X_seq = X_seq[config['washout']:]
-        Y_seq = Y_train[i][config['washout']:]
-        Y_pred = X_seq @ wout
-        train_preds.append(Y_pred)
-        train_targets.append(Y_seq)
+    if verbose:
+        print(f"   ✓ W_out shape: {wout.shape}")
+        print(f"   ✓ Training time: {train_time:.1f}s")
     
-    test_preds, test_targets = [], []
-    for i in range(len(X_test)):
-        X_seq = reservoir.forward(X_test[i], collect_states=True)
-        if len(X_seq) <= config['washout']:
-            continue
-        X_seq = X_seq[config['washout']:]
-        Y_seq = Y_test[i][config['washout']:]
-        Y_pred = X_seq @ wout
-        test_preds.append(Y_pred)
-        test_targets.append(Y_seq)
+    # Evaluate on training set
+    if verbose:
+        print(f"\n📈 Evaluating on training set...")
     
-    if not train_preds or not test_preds:
-        raise ValueError("All sessions too short after washout!")
+    train_preds = X_train_states @ wout
+    train_targets = Y_train_targets
     
-    train_preds = np.vstack(train_preds)
-    train_targets = np.vstack(train_targets)
-    test_preds = np.vstack(test_preds)
-    test_targets = np.vstack(test_targets)
+    # Evaluate on test set
+    if verbose:
+        print(f"\n📉 Evaluating on test set...")
+        print(f"   Test data: {X_test.shape}")
     
-    # Metrics
+    X_test_states = reservoir.forward(X_test, collect_states=True)
+    X_test_states = X_test_states[config['washout']:]
+    Y_test_targets = Y_test[config['washout']:]
+    
+    test_preds = X_test_states @ wout
+    test_targets = Y_test_targets
+    
+    if verbose:
+        print(f"   ✓ Test predictions: {test_preds.shape}")
+    
+    if len(train_preds) == 0 or len(test_preds) == 0:
+        raise ValueError("All data too short after washout!")
+    
+    # Metrics (already numpy arrays, no need to vstack)
+    if verbose:
+        print(f"\n📊 Computing metrics...")
+    
     train_dir = compute_direction_metrics(train_targets[:, :2], train_preds[:, :2])
     train_boost = compute_boost_metrics(train_targets, train_preds)  # Pass full array
     test_dir = compute_direction_metrics(test_targets[:, :2], test_preds[:, :2])
@@ -122,8 +127,8 @@ def train_random_reservoir(
     
     if verbose:
         print(f"\n⏱️  Training time: {train_time:.2f}s")
-        print(f"\n📊 Train: Boost Acc={train_boost['accuracy']:.2%}, Angular={train_dir['angular_error_deg']:.1f}°")
-        print(f"📊 Test:  Boost Acc={test_boost['accuracy']:.2%}, Angular={test_dir['angular_error_deg']:.1f}°")
+        print(f"\n📊 Train: Boost Acc={train_boost['boost_accuracy']:.2%}, Angular={train_dir['angular_error_deg']:.1f}°")
+        print(f"📊 Test:  Boost Acc={test_boost['boost_accuracy']:.2%}, Angular={test_dir['angular_error_deg']:.1f}°")
     
     return {
         'reservoir_type': 'random',
@@ -162,59 +167,60 @@ def train_connectome_reservoir(
             edge_attr='weight'
         )
         
-        # Collect training states
-        all_states = []
-        all_targets = []
+        # Collect training states - X_train is already concatenated
+        if verbose:
+            print(f"\n📊 Collecting reservoir states...")
+            print(f"   Training data: {X_train.shape}")
         
-        for i in range(len(X_train)):
-            X_seq = reservoir.forward(X_train[i], collect_states=True)
-            if len(X_seq) <= config['washout']:
-                continue
-            X_seq = X_seq[config['washout']:]
-            Y_seq = Y_train[i][config['washout']:]
-            all_states.append(X_seq)
-            all_targets.append(Y_seq)
+        X_train_states = reservoir.forward(X_train, collect_states=True)
+        X_train_states = X_train_states[config['washout']:]
+        Y_train_targets = Y_train[config['washout']:]
         
-        X_train_states = np.vstack(all_states)
-        Y_train_targets = np.vstack(all_targets)
+        if verbose:
+            print(f"   ✓ States collected: {X_train_states.shape}")
+            print(f"   ✓ After washout: {X_train_states.shape[0]} frames")
         
         # Train
+        if verbose:
+            print(f"\n🎓 Training output weights (Ridge regression, alpha={config['alpha']})...")
+        
         wout = compute_wout(X_train_states, Y_train_targets, alpha=config['alpha'])
         
         train_time = time.time() - start_time
         
-        # Evaluate
-        train_preds, train_targets = [], []
-        for i in range(len(X_train)):
-            X_seq = reservoir.forward(X_train[i], collect_states=True)
-            if len(X_seq) <= config['washout']:
-                continue
-            X_seq = X_seq[config['washout']:]
-            Y_seq = Y_train[i][config['washout']:]
-            Y_pred = X_seq @ wout
-            train_preds.append(Y_pred)
-            train_targets.append(Y_seq)
+        if verbose:
+            print(f"   ✓ W_out shape: {wout.shape}")
+            print(f"   ✓ Training time: {train_time:.1f}s")
         
-        test_preds, test_targets = [], []
-        for i in range(len(X_test)):
-            X_seq = reservoir.forward(X_test[i], collect_states=True)
-            if len(X_seq) <= config['washout']:
-                continue
-            X_seq = X_seq[config['washout']:]
-            Y_seq = Y_test[i][config['washout']:]
-            Y_pred = X_seq @ wout
-            test_preds.append(Y_pred)
-            test_targets.append(Y_seq)
+        # Evaluate on training set
+        if verbose:
+            print(f"\n📈 Evaluating on training set...")
         
-        if not train_preds or not test_preds:
-            raise ValueError("All sessions too short after washout!")
+        train_preds = X_train_states @ wout
+        train_targets = Y_train_targets
         
-        train_preds = np.vstack(train_preds)
-        train_targets = np.vstack(train_targets)
-        test_preds = np.vstack(test_preds)
-        test_targets = np.vstack(test_targets)
+        # Evaluate on test set
+        if verbose:
+            print(f"\n📉 Evaluating on test set...")
+            print(f"   Test data: {X_test.shape}")
         
-        # Metrics
+        X_test_states = reservoir.forward(X_test, collect_states=True)
+        X_test_states = X_test_states[config['washout']:]
+        Y_test_targets = Y_test[config['washout']:]
+        
+        test_preds = X_test_states @ wout
+        test_targets = Y_test_targets
+        
+        if verbose:
+            print(f"   ✓ Test predictions: {test_preds.shape}")
+        
+        if len(train_preds) == 0 or len(test_preds) == 0:
+            raise ValueError("All data too short after washout!")
+        
+        # Metrics (already numpy arrays, no need to vstack)
+        if verbose:
+            print(f"\n📊 Computing metrics...")
+        
         train_dir = compute_direction_metrics(train_targets[:, :2], train_preds[:, :2])
         train_boost = compute_boost_metrics(train_targets, train_preds)  # Pass full array
         test_dir = compute_direction_metrics(test_targets[:, :2], test_preds[:, :2])
@@ -222,8 +228,8 @@ def train_connectome_reservoir(
         
         if verbose:
             print(f"\n⏱️  Training time: {train_time:.2f}s")
-            print(f"\n📊 Train: Boost Acc={train_boost['accuracy']:.2%}, Angular={train_dir['angular_error_deg']:.1f}°")
-            print(f"📊 Test:  Boost Acc={test_boost['accuracy']:.2%}, Angular={test_dir['angular_error_deg']:.1f}°")
+            print(f"\n📊 Train: Boost Acc={train_boost['boost_accuracy']:.2%}, Angular={train_dir['angular_error_deg']:.1f}°")
+            print(f"📊 Test:  Boost Acc={test_boost['boost_accuracy']:.2%}, Angular={test_dir['angular_error_deg']:.1f}°")
         
         return {
             'reservoir_type': 'brain_connectome',
@@ -542,24 +548,21 @@ def main():
         print(f"\n❌ Errore nel caricamento dati: {e}")
         return 1
     
-    # Split
-    print(f"\n🔀 Split train/test (test_size={TEST_SPLIT})...")
+    # Split using random chunks from each session (NEW!)
+    print(f"\n🔀 Split train/test usando chunk casuali da ogni sessione (test_size={TEST_SPLIT})...")
     from utilities.data_loader import train_test_split as split_sessions
-    X_train, y_train, X_test, y_test, train_names, test_names = split_sessions(
-        X_list, y_list, session_names, test_size=TEST_SPLIT, random_seed=RANDOM_SEED
+    X_train, y_train, X_test, y_test = split_sessions(
+        X_list, y_list, session_names, 
+        test_size=TEST_SPLIT, 
+        random_seed=RANDOM_SEED,
+        use_chunks=True  # NEW: More homogeneous test set
     )
     
-    # Concatenate
-    X_train = np.vstack(X_train)
-    y_train = np.vstack(y_train)
-    X_test = np.vstack(X_test)
-    y_test = np.vstack(y_test)
+    print(f"  ✓ Training frames: {X_train.shape[0]}")
+    print(f"  ✓ Test frames: {X_test.shape[0]}")
+    print(f"  ✓ Test ratio: {X_test.shape[0] / (X_train.shape[0] + X_test.shape[0]):.1%}")
     
-    # Reshape to sequences [n_samples, seq_len, features]
-    X_train = X_train.reshape(len(X_train), 1, -1)
-    X_test = X_test.reshape(len(X_test), 1, -1)
-    
-    n_inputs = X_train.shape[2]
+    n_inputs = X_train.shape[1]
     
     config = {
         'n_reservoir': N_RESERVOIR,

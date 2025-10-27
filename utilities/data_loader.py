@@ -198,7 +198,7 @@ def create_sequences_with_horizon(X: np.ndarray, y: np.ndarray,
 
 
 def load_all_data(data_path: Path, 
-                  verbose: bool = True) -> Tuple[List[np.ndarray], List[np.ndarray], List[str]]:
+                  verbose: bool = True) -> Tuple[List[np.ndarray], List[np.ndarray], List[str], List[str]]:
     """
     Load and prepare all available sessions.
     
@@ -207,10 +207,11 @@ def load_all_data(data_path: Path,
         verbose: Print progress information
         
     Returns:
-        Tuple of (X_list, y_list, session_names) where:
+        Tuple of (X_list, y_list, session_names, usernames) where:
         - X_list: List of input arrays for each session
         - y_list: List of output arrays for each session
         - session_names: List of session names for tracking
+        - usernames: List of usernames for each session
     """
     # Discover sessions
     session_paths = discover_sessions(data_path)
@@ -221,6 +222,7 @@ def load_all_data(data_path: Path,
     X_list = []
     y_list = []
     session_names = []
+    usernames = []
     
     for i, session_path in enumerate(session_paths):
         if verbose:
@@ -243,12 +245,14 @@ def load_all_data(data_path: Path,
                 print(f"  Skipping: not enough frames for horizon={PREDICTION_HORIZON}")
             continue
         
+        username = session_data['metadata'].get('username', 'unknown')
+        
         X_list.append(X_seq)
         y_list.append(y_seq)
         session_names.append(session_path.name)
+        usernames.append(username)
         
         if verbose:
-            username = session_data['metadata'].get('username', 'unknown')
             print(f"  ✓ Loaded: {X_seq.shape[0]} frames, user: {username}")
     
     if verbose:
@@ -256,14 +260,92 @@ def load_all_data(data_path: Path,
         total_frames = sum(X.shape[0] for X in X_list)
         print(f"  Total frames: {total_frames}")
     
-    return X_list, y_list, session_names
+    return X_list, y_list, session_names, usernames
+
+
+def train_test_split_chunks(X_list: List[np.ndarray], 
+                           y_list: List[np.ndarray],
+                           session_names: List[str],
+                           usernames: List[str] = None,
+                           test_size: float = TEST_SPLIT,
+                           n_chunks: int = 3,
+                           random_seed: int = RANDOM_SEED) -> Tuple:
+    """
+    Split data into training and testing sets by taking random chunks from each session.
+    This creates a more homogeneous test set compared to taking entire sessions.
+    
+    Args:
+        X_list: List of input arrays (one per session)
+        y_list: List of output arrays (one per session)
+        session_names: List of session names
+        usernames: List of usernames for each session (optional)
+        test_size: Fraction of data for testing (per session)
+        n_chunks: Number of random chunks to extract from each session for test
+        random_seed: Random seed for reproducibility
+        
+    Returns:
+        X_train, y_train, X_test, y_test, test_user_indices (all concatenated)
+        test_user_indices maps each test sample to its session index for user analysis
+    """
+    np.random.seed(random_seed)
+    
+    X_train_all = []
+    y_train_all = []
+    X_test_all = []
+    y_test_all = []
+    test_user_indices = []  # Track which session each test sample belongs to
+    
+    for i, (X_session, y_session) in enumerate(zip(X_list, y_list)):
+        n_frames = len(X_session)
+        chunk_size = max(1, int(n_frames * test_size / n_chunks))
+        
+        # Generate random start indices for test chunks
+        max_start = n_frames - chunk_size
+        if max_start <= 0:
+            # Session too short, put all in train
+            X_train_all.append(X_session)
+            y_train_all.append(y_session)
+            continue
+        
+        # Sample n_chunks random positions
+        test_starts = np.random.choice(max_start, size=min(n_chunks, max_start), replace=False)
+        
+        # Create mask for test indices
+        test_mask = np.zeros(n_frames, dtype=bool)
+        for start in test_starts:
+            end = min(start + chunk_size, n_frames)
+            test_mask[start:end] = True
+        
+        # Split into train/test
+        X_test_session = X_session[test_mask]
+        y_test_session = y_session[test_mask]
+        
+        X_test_all.append(X_test_session)
+        y_test_all.append(y_test_session)
+        
+        # Track session index for each test sample
+        test_user_indices.extend([i] * len(X_test_session))
+        
+        X_train_all.append(X_session[~test_mask])
+        y_train_all.append(y_session[~test_mask])
+    
+    # Concatenate all
+    X_train = np.concatenate(X_train_all, axis=0) if X_train_all else np.array([])
+    y_train = np.concatenate(y_train_all, axis=0) if y_train_all else np.array([])
+    X_test = np.concatenate(X_test_all, axis=0) if X_test_all else np.array([])
+    y_test = np.concatenate(y_test_all, axis=0) if y_test_all else np.array([])
+    test_user_indices = np.array(test_user_indices)
+    
+    return X_train, y_train, X_test, y_test, test_user_indices
 
 
 def train_test_split(X_list: List[np.ndarray], 
                      y_list: List[np.ndarray],
                      session_names: List[str],
+                     usernames: List[str] = None,
                      test_size: float = TEST_SPLIT,
-                     random_seed: int = RANDOM_SEED) -> Tuple:
+                     random_seed: int = RANDOM_SEED,
+                     use_chunks: bool = True) -> Tuple:
     """
     Split data into training and testing sets.
     
@@ -271,33 +353,43 @@ def train_test_split(X_list: List[np.ndarray],
         X_list: List of input arrays
         y_list: List of output arrays
         session_names: List of session names
+        usernames: List of usernames for each session (optional)
         test_size: Fraction of data for testing
         random_seed: Random seed for reproducibility
+        use_chunks: If True, take random chunks from each session (recommended)
+                   If False, take entire sessions for test (old behavior)
         
     Returns:
-        X_train, y_train, X_test, y_test, train_names, test_names
+        If use_chunks=True: X_train, y_train, X_test, y_test, test_user_indices (concatenated arrays)
+        If use_chunks=False: X_train, y_train, X_test, y_test, train_names, test_names (lists)
     """
-    np.random.seed(random_seed)
-    
-    n_sessions = len(X_list)
-    n_test = max(1, int(n_sessions * test_size))
-    
-    # Random indices for test set
-    indices = np.arange(n_sessions)
-    np.random.shuffle(indices)
-    test_indices = indices[:n_test]
-    train_indices = indices[n_test:]
-    
-    # Split data
-    X_train = [X_list[i] for i in train_indices]
-    y_train = [y_list[i] for i in train_indices]
-    train_names = [session_names[i] for i in train_indices]
-    
-    X_test = [X_list[i] for i in test_indices]
-    y_test = [y_list[i] for i in test_indices]
-    test_names = [session_names[i] for i in test_indices]
-    
-    return X_train, y_train, X_test, y_test, train_names, test_names
+    if use_chunks:
+        # New method: random chunks from each session
+        return train_test_split_chunks(X_list, y_list, session_names, usernames,
+                                      test_size, n_chunks=3, random_seed=random_seed)
+    else:
+        # Old method: entire sessions
+        np.random.seed(random_seed)
+        
+        n_sessions = len(X_list)
+        n_test = max(1, int(n_sessions * test_size))
+        
+        # Random indices for test set
+        indices = np.arange(n_sessions)
+        np.random.shuffle(indices)
+        test_indices = indices[:n_test]
+        train_indices = indices[n_test:]
+        
+        # Split data
+        X_train = [X_list[i] for i in train_indices]
+        y_train = [y_list[i] for i in train_indices]
+        train_names = [session_names[i] for i in train_indices]
+        
+        X_test = [X_list[i] for i in test_indices]
+        y_test = [y_list[i] for i in test_indices]
+        test_names = [session_names[i] for i in test_indices]
+        
+        return X_train, y_train, X_test, y_test, train_names, test_names
 
 
 def concatenate_sessions(X_list: List[np.ndarray], 
@@ -333,33 +425,24 @@ if __name__ == "__main__":
     X_list, y_list, session_names = load_all_data(SLITHER_DATA_PATH, verbose=True)
     
     if len(X_list) > 0:
-        # Split into train/test
-        X_train, y_train, X_test, y_test, train_names, test_names = train_test_split(
-            X_list, y_list, session_names
+        # Split into train/test using random chunks (new method)
+        X_train, y_train, X_test, y_test = train_test_split(
+            X_list, y_list, session_names, use_chunks=True
         )
         
         print(f"\n{'=' * 60}")
-        print("TRAIN/TEST SPLIT")
+        print("TRAIN/TEST SPLIT (usando chunk casuali da ogni sessione)")
         print("=" * 60)
-        print(f"Training sessions: {len(X_train)}")
-        for name in train_names:
-            print(f"  - {name}")
-        print(f"\nTest sessions: {len(X_test)}")
-        for name in test_names:
-            print(f"  - {name}")
-        
-        # Concatenate for stats
-        X_train_cat, y_train_cat = concatenate_sessions(X_train, y_train)
-        X_test_cat, y_test_cat = concatenate_sessions(X_test, y_test)
-        
-        print(f"\nTraining frames: {X_train_cat.shape[0]}")
-        print(f"Test frames: {X_test_cat.shape[0]}")
-        print(f"Input dimension: {X_train_cat.shape[1]}")
-        print(f"Output dimension: {y_train_cat.shape[1]}")
+        print(f"Total sessions: {len(X_list)}")
+        print(f"Training frames: {X_train.shape[0]}")
+        print(f"Test frames: {X_test.shape[0]}")
+        print(f"Test ratio: {X_test.shape[0] / (X_train.shape[0] + X_test.shape[0]):.1%}")
+        print(f"Input dimension: {X_train.shape[1]}")
+        print(f"Output dimension: {y_train.shape[1]}")
         
         print(f"\nOutput statistics (training set):")
-        print(f"  mx: mean={y_train_cat[:, 0].mean():.3f}, std={y_train_cat[:, 0].std():.3f}")
-        print(f"  my: mean={y_train_cat[:, 1].mean():.3f}, std={y_train_cat[:, 1].std():.3f}")
-        print(f"  boost: mean={y_train_cat[:, 2].mean():.3f} (fraction active)")
+        print(f"  mx: mean={y_train[:, 0].mean():.3f}, std={y_train[:, 0].std():.3f}")
+        print(f"  my: mean={y_train[:, 1].mean():.3f}, std={y_train[:, 1].std():.3f}")
+        print(f"  boost: mean={y_train[:, 2].mean():.3f} (fraction active)")
     else:
         print("\n⚠ No data found! Check SLITHER_DATA_PATH in configuration.py")

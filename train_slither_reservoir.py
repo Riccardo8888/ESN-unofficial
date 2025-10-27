@@ -27,7 +27,9 @@ from utilities.data_loader import (
 from reservoir import Reservoir  # Usa il reservoir esistente!
 from utilities.metrics import (
     compute_all_metrics, 
-    print_metrics, 
+    print_metrics,
+    compute_direction_metrics,
+    compute_boost_metrics,
     compare_metrics
 )
 
@@ -76,7 +78,7 @@ def main():
     print("STEP 1: LOADING DATA")
     print("=" * 60)
     
-    X_list, y_list, session_names = load_all_data(SLITHER_DATA_PATH, verbose=True)
+    X_list, y_list, session_names, usernames = load_all_data(SLITHER_DATA_PATH, verbose=True)
     
     if len(X_list) == 0:
         print("\n❌ ERROR: No data found!")
@@ -88,30 +90,24 @@ def main():
     # STEP 2: TRAIN/TEST SPLIT
     # ===========================================
     print("\n" + "=" * 60)
-    print("STEP 2: TRAIN/TEST SPLIT")
+    print("STEP 2: TRAIN/TEST SPLIT (usando chunk casuali)")
     print("=" * 60)
     
-    X_train, y_train, X_test, y_test, train_names, test_names = train_test_split(
-        X_list, y_list, session_names, 
+    # Use new chunk-based splitting for more homogeneous test set
+    X_train_cat, y_train_cat, X_test_cat, y_test_cat, test_user_indices = train_test_split(
+        X_list, y_list, session_names, usernames,
         test_size=TEST_SPLIT, 
-        random_seed=RANDOM_SEED
+        random_seed=RANDOM_SEED,
+        use_chunks=True  # NEW: Take random chunks from each session
     )
     
-    print(f"\nTraining sessions ({len(X_train)}):")
-    for name in train_names:
-        print(f"  - {name}")
-    
-    print(f"\nTest sessions ({len(X_test)}):")
-    for name in test_names:
-        print(f"  - {name}")
-    
-    # Concatenate sessions (come in humand_data.ipynb)
-    X_train_cat, y_train_cat = concatenate_sessions(X_train, y_train)
-    X_test_cat, y_test_cat = concatenate_sessions(X_test, y_test)
+    print(f"\nTaking {TEST_SPLIT:.0%} random chunks from each session for test set")
+    print(f"This creates a more representative and homogeneous test set")
     
     print(f"\nData shapes:")
     print(f"  Training:   X={X_train_cat.shape}, y={y_train_cat.shape}")
     print(f"  Test:       X={X_test_cat.shape}, y={y_test_cat.shape}")
+    print(f"  Test ratio: {X_test_cat.shape[0] / (X_train_cat.shape[0] + X_test_cat.shape[0]):.1%}")
     print(f"  Input dim:  {X_train_cat.shape[1]}")
     print(f"  Output dim: {y_train_cat.shape[1]}")
     
@@ -208,6 +204,81 @@ def main():
     compare_metrics(train_metrics, test_metrics)
     
     # ===========================================
+    # STEP 8.5: PER-USER ANALYSIS
+    # ===========================================
+    print("\n" + "=" * 60)
+    print("STEP 8.5: PER-USER ANALYSIS (Test Set)")
+    print("=" * 60)
+    
+    # Adjust test_user_indices for washout
+    test_user_indices_adj = test_user_indices[WASHOUT:]
+    
+    # Group by user
+    unique_users = {}
+    for idx in range(len(X_list)):
+        username = usernames[idx]
+        if username not in unique_users:
+            unique_users[username] = []
+        unique_users[username].append(idx)
+    
+    print(f"\nAnalyzing performance across {len(unique_users)} users:")
+    print(f"{'User':<15} {'Frames':<10} {'Boost Acc':<12} {'RMSE (dir)':<12} {'Angular Err':<12}")
+    print("=" * 65)
+    
+    user_stats = {}
+    for username, session_indices in unique_users.items():
+        # Find test samples belonging to this user's sessions
+        user_mask = np.isin(test_user_indices_adj, session_indices)
+        
+        if not user_mask.any():
+            continue
+        
+        # Get predictions and targets for this user
+        y_user_pred = y_test_pred[user_mask]
+        y_user_true = y_test_true[user_mask]
+        
+        # Compute metrics
+        user_dir = compute_direction_metrics(y_user_true[:, :2], y_user_pred[:, :2])
+        user_boost = compute_boost_metrics(y_user_true, y_user_pred)
+        
+        user_stats[username] = {
+            'n_frames': len(y_user_pred),
+            'boost_accuracy': user_boost['boost_accuracy'],
+            'rmse_direction': user_dir['rmse_direction'],
+            'angular_error_deg': user_dir['angular_error_deg']
+        }
+        
+        print(f"{username:<15} {len(y_user_pred):<10} "
+              f"{user_boost['boost_accuracy']:>10.2%}  "
+              f"{user_dir['rmse_direction']:>10.4f}  "
+              f"{user_dir['angular_error_deg']:>10.2f}°")
+    
+    # Summary statistics
+    if len(user_stats) > 1:
+        all_boost_accs = [s['boost_accuracy'] for s in user_stats.values()]
+        all_rmses = [s['rmse_direction'] for s in user_stats.values()]
+        
+        print("\n" + "-" * 65)
+        print(f"{'MEAN':<15} {'':<10} {np.mean(all_boost_accs):>10.2%}  {np.mean(all_rmses):>10.4f}")
+        print(f"{'STD':<15} {'':<10} {np.std(all_boost_accs):>10.2%}  {np.std(all_rmses):>10.4f}")
+        print(f"{'MIN':<15} {'':<10} {np.min(all_boost_accs):>10.2%}  {np.min(all_rmses):>10.4f}")
+        print(f"{'MAX':<15} {'':<10} {np.max(all_boost_accs):>10.2%}  {np.max(all_rmses):>10.4f}")
+        
+        # Identify best and worst performers
+        best_user = max(user_stats, key=lambda u: user_stats[u]['boost_accuracy'])
+        worst_user = min(user_stats, key=lambda u: user_stats[u]['boost_accuracy'])
+        
+        print(f"\n💡 Insights:")
+        print(f"   🏆 Best performer: {best_user} ({user_stats[best_user]['boost_accuracy']:.2%} accuracy)")
+        print(f"   ⚠️  Worst performer: {worst_user} ({user_stats[worst_user]['boost_accuracy']:.2%} accuracy)")
+        
+        acc_range = np.max(all_boost_accs) - np.min(all_boost_accs)
+        if acc_range > 0.10:  # 10% difference
+            print(f"   📊 Large variance ({acc_range:.1%}) suggests user-specific patterns")
+        else:
+            print(f"   ✓ Low variance ({acc_range:.1%}) indicates good generalization across users")
+    
+    # ===========================================
     # STEP 9: SAVE RESULTS
     # ===========================================
     print("\n" + "=" * 60)
@@ -247,11 +318,11 @@ def main():
             'washout': WASHOUT,
             'test_split': TEST_SPLIT,
             'random_seed': RANDOM_SEED,
+            'split_method': 'random_chunks_per_session',
             'approach': 'reservoir.py (same as humand_data.ipynb)'
         },
         'data': {
-            'train_sessions': train_names,
-            'test_sessions': test_names,
+            'total_sessions': len(session_names),
             'n_train_frames': X_train_cat.shape[0],
             'n_test_frames': X_test_cat.shape[0],
             'input_dim': X_train_cat.shape[1],
@@ -297,6 +368,59 @@ def main():
     print(f"   - reservoir.forward() per raccogliere stati")
     print(f"   - compute_wout() per training con ridge regression")
     print(f"   - X @ W_out per predizioni")
+    
+    # ===========================================
+    # APPEND TO TRAINING HISTORY LOG
+    # ===========================================
+    log_file = Path(__file__).parent / "TRAINING_RESULTS.txt"
+    
+    # Create header if file doesn't exist
+    if not log_file.exists():
+        with open(log_file, 'w') as f:
+            f.write("="*80 + "\n")
+            f.write("SLITHER.IO ESN TRAINING RESULTS LOG\n")
+            f.write("="*80 + "\n\n")
+    
+    # Append this training's results
+    with open(log_file, 'a') as f:
+        f.write(f"\n{'='*80}\n")
+        f.write(f"Training: {timestamp} ({datetime.now().strftime('%Y-%m-%d %H:%M:%S')})\n")
+        f.write(f"{'='*80}\n\n")
+        
+        f.write("ESN Configuration:\n")
+        f.write(f"  - Reservoir size: {N_RESERVOIR}\n")
+        f.write(f"  - Spectral radius: {SPECTRAL_RADIUS}\n")
+        f.write(f"  - Input scale: {INPUT_SCALE}\n")
+        f.write(f"  - Leak rate: [{LEAK_RATE_MIN}, {LEAK_RATE_MAX}]\n")
+        f.write(f"  - Sparsity: {SPARSITY}\n\n")
+        
+        f.write("Training Configuration:\n")
+        f.write(f"  - Alpha (regularization): {ALPHA}\n")
+        f.write(f"  - Washout: {WASHOUT} frames\n")
+        f.write(f"  - Prediction horizon: {PREDICTION_HORIZON} frames\n")
+        f.write(f"  - Test split: {TEST_SPLIT*100:.0f}%\n")
+        f.write(f"  - Random seed: {RANDOM_SEED}\n")
+        f.write(f"  - Total frames: {X_train_cat.shape[0] + X_test_cat.shape[0]}\n\n")
+        
+        f.write("🎯 Key Results:\n")
+        f.write(f"  Direction RMSE (test):  {test_metrics['rmse_direction']:.4f}\n")
+        f.write(f"  Angular Error (test):   {test_metrics['angular_error_deg']:.2f}°\n")
+        f.write(f"  Boost Accuracy (test):  {test_metrics['boost_accuracy']*100:.2f}%\n")
+        f.write(f"  Overall MSE (test):     {test_metrics['overall_mse']:.6f}\n")
+        f.write(f"  MSE Ratio (test/train): {test_metrics['overall_mse']/train_metrics['overall_mse']:.3f}\n\n")
+        
+        # Per-user stats if available
+        if len(user_stats) > 0:
+            f.write("👥 Per-User Performance:\n")
+            for username, stats in sorted(user_stats.items(), key=lambda x: x[1]['boost_accuracy'], reverse=True):
+                f.write(f"  - {username:<12} Boost Acc: {stats['boost_accuracy']*100:>6.2f}%  "
+                       f"RMSE: {stats['rmse_direction']:.4f}  ({stats['n_frames']} frames)\n")
+            f.write("\n")
+        
+        f.write(f"📁 Output: {output_dir.name}\n")
+        f.write(f"{'-'*80}\n")
+    
+    print(f"\n✅ Results appended to: {log_file}")
     
     print("\n" + "=" * 60)
     print("✓ ALL DONE!")

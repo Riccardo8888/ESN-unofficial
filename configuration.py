@@ -34,7 +34,7 @@ OUTPUT_DIM = 3         # mx (direction x), my (direction y), boost (0/1)
 # PREDICTION PARAMETERS
 # ===========================================
 # Number of frames to predict into the future
-PREDICTION_HORIZON = 3  # At frame t, predict player actions at frame t+5
+PREDICTION_HORIZON = 1  # At frame t, predict player actions at frame t+5
 
 # Minimum frames per session to be considered valid
 MIN_FRAMES_PER_SESSION = 100
@@ -52,10 +52,10 @@ RANDOM_SEED = 42
 # ECHO STATE NETWORK PARAMETERS
 # ===========================================
 # Reservoir size
-N_RESERVOIR = 1000     # Number of neurons in the reservoir
+N_RESERVOIR = 1500     # Number of neurons in the reservoir
 
 # Spectral radius (controls dynamics)
-SPECTRAL_RADIUS = 1.25
+SPECTRAL_RADIUS = 1.0
 
 # Input scaling
 INPUT_SCALE = 1.0
@@ -71,7 +71,7 @@ SPARSITY = 0.9         # 90% of connections are zero
 # TRAINING PARAMETERS
 # ===========================================
 # Ridge regression regularization parameter
-ALPHA = 1e-3
+ALPHA = 0.01
 
 # Washout period (frames to discard at start of each sequence)
 WASHOUT = 50

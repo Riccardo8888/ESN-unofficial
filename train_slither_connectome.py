@@ -367,21 +367,19 @@ def main():
         print(f"\n❌ Errore nel caricamento dati: {e}")
         return 1
     
-    # Split train/test
-    print(f"\n🔀 Split train/test (test_size={TEST_SPLIT})...")
+    # Split train/test using random chunks from each session (NEW!)
+    print(f"\n🔀 Split train/test usando chunk casuali da ogni sessione (test_size={TEST_SPLIT})...")
     from utilities.data_loader import train_test_split as split_sessions
-    X_train, y_train, X_test, y_test, train_names, test_names = split_sessions(
-        X_list, y_list, session_names, test_size=TEST_SPLIT, random_seed=RANDOM_SEED
+    X_train, y_train, X_test, y_test = split_sessions(
+        X_list, y_list, session_names, 
+        test_size=TEST_SPLIT, 
+        random_seed=RANDOM_SEED,
+        use_chunks=True  # NEW: More homogeneous test set
     )
     
-    print(f"   ✓ Training sessions: {len(X_train)}")
-    print(f"   ✓ Test sessions: {len(X_test)}")
-    
-    # Concatenate sessions
-    X_train = np.vstack(X_train)
-    y_train = np.vstack(y_train)
-    X_test = np.vstack(X_test)
-    y_test = np.vstack(y_test)
+    print(f"   ✓ Training frames: {X_train.shape[0]}")
+    print(f"   ✓ Test frames: {X_test.shape[0]}")
+    print(f"   ✓ Test ratio: {X_test.shape[0] / (X_train.shape[0] + X_test.shape[0]):.1%}")
     
     # Reshape to sequences [n_samples, seq_len, features]
     # Each sample is already a time sequence from load_all_data

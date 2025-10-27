@@ -1,0 +1,93 @@
+{
+  "best_config": {
+    "alpha": 0.02,
+    "n_reservoir": 500,
+    "spectral_radius": 1.1,
+    "washout": 60
+  },
+  "best_metrics": {
+    "val_boost_acc": 0.669967605151571,
+    "val_rmse": 0.6453167770987469,
+    "mse_ratio": 1.582833823782523,
+    "acc_diff": 0.15296862478036588,
+    "score": 0.6210904978172456
+  },
+  "top_5": [
+    {
+      "config": {
+        "alpha": 0.02,
+        "n_reservoir": 500,
+        "spectral_radius": 1.1,
+        "washout": 60
+      },
+      "metrics": {
+        "val_boost_acc": 0.669967605151571,
+        "val_rmse": 0.6453167770987469,
+        "mse_ratio": 1.582833823782523,
+        "acc_diff": 0.15296862478036588,
+        "score": 0.6210904978172456
+      }
+    },
+    {
+      "config": {
+        "alpha": 0.02,
+        "n_reservoir": 500,
+        "spectral_radius": 1.0,
+        "washout": 40
+      },
+      "metrics": {
+        "val_boost_acc": 0.6548651100606409,
+        "val_rmse": 0.6423419292405612,
+        "mse_ratio": 1.5631411350007698,
+        "acc_diff": 0.16396122809530622,
+        "score": 0.6057587509415027
+      }
+    },
+    {
+      "config": {
+        "alpha": 0.015,
+        "n_reservoir": 500,
+        "spectral_radius": 1.0,
+        "washout": 60
+      },
+      "metrics": {
+        "val_boost_acc": 0.6540817132773729,
+        "val_rmse": 0.6411372876531083,
+        "mse_ratio": 1.5595042676660915,
+        "acc_diff": 0.16510973237565985,
+        "score": 0.6051093400356317
+      }
+    },
+    {
+      "config": {
+        "alpha": 0.015,
+        "n_reservoir": 500,
+        "spectral_radius": 1.1,
+        "washout": 60
+      },
+      "metrics": {
+        "val_boost_acc": 0.6618934243348897,
+        "val_rmse": 0.6573234274289399,
+        "mse_ratio": 1.6571943002582021,
+        "acc_diff": 0.15998133815932547,
+        "score": 0.6041777266772044
+      }
+    },
+    {
+      "config": {
+        "alpha": 0.015,
+        "n_reservoir": 500,
+        "spectral_radius": 1.1,
+        "washout": 40
+      },
+      "metrics": {
+        "val_boost_acc": 0.6583273280222142,
+        "val_rmse": 0.6460126476878961,
+        "mse_ratio": 1.6105091868850858,
+        "acc_diff": 0.16715766971890744,
+        "score": 0.603844875389924
+      }
+    }
+  ],
+  "search_time": 1478.4744782447815
+}
