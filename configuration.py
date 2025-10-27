@@ -34,7 +34,7 @@ OUTPUT_DIM = 3         # mx (direction x), my (direction y), boost (0/1)
 # PREDICTION PARAMETERS
 # ===========================================
 # Number of frames to predict into the future
-PREDICTION_HORIZON = 1  # At frame t, predict player actions at frame t+5
+PREDICTION_HORIZON = 0  # At frame t, predict player actions at frame t (immediate action)
 
 # Minimum frames per session to be considered valid
 MIN_FRAMES_PER_SESSION = 100
@@ -52,26 +52,26 @@ RANDOM_SEED = 42
 # ECHO STATE NETWORK PARAMETERS
 # ===========================================
 # Reservoir size
-N_RESERVOIR = 2000     # Number of neurons in the reservoir
+N_RESERVOIR = 1500     # Number of neurons in the reservoir (reduced from 2000)
 
 # Spectral radius (controls dynamics)
-SPECTRAL_RADIUS = 1.1
+SPECTRAL_RADIUS = 1.0
 
 # Input scaling
 INPUT_SCALE = 1.0
 
 # Leak rate range (for leaky integrator neurons)
-LEAK_RATE_MIN = 0.05
-LEAK_RATE_MAX = 0.2
+LEAK_RATE_MIN = 0.1
+LEAK_RATE_MAX = 0.3
 
 # Sparsity of reservoir connectivity (None = dense, or value between 0-1)
-SPARSITY = 0.85         # 90% of connections are zero
+SPARSITY = 0.9         # 90% of connections are zero
 
 # ===========================================
 # TRAINING PARAMETERS
 # ===========================================
 # Ridge regression regularization parameter
-ALPHA = 0.005
+ALPHA = 0.01           # Increased from 0.005 to prevent overfitting
 
 # Washout period (frames to discard at start of each sequence)
 WASHOUT = 50
@@ -90,7 +90,7 @@ PROGRESS_INTERVAL = 1000
 # ===========================================
 # Include additional features beyond grid data
 USE_VELOCITY = True    # Include snake velocity as input
-USE_HEADING = True     # Include snake heading as input
+USE_HEADING = False     # Include snake heading as input
 USE_DISTANCE_TO_BORDER = True  # Include distance to border as input
 USE_ANGULAR_VELOCITY = True  # Include rate of heading change (d_heading/dt)
 USE_DISTANCE_VELOCITY = True  # Include rate of distance change (d_distance/dt)

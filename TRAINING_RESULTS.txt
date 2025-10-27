@@ -318,3 +318,143 @@ Training Configuration:
 
 📁 Output: training_20251027_231628
 --------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251027_232214 (2025-10-27 23:22:18)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 2000
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.05, 0.2]
+  - Sparsity: 0.85
+
+Training Configuration:
+  - Alpha (regularization): 0.005
+  - Washout: 50 frames
+  - Prediction horizon: 1 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 144254
+
+🎯 Key Results:
+  Direction RMSE (test):  0.4594
+  Angular Error (test):   32.80°
+  Boost Accuracy (test):  80.61%
+  Overall MSE (test):     0.190886
+  MSE Ratio (test/train): 1.294
+
+👥 Per-User Performance:
+  - michele      Boost Acc:  91.07%  RMSE: 0.4968  (582 frames)
+  - Riccardo     Boost Acc:  82.34%  RMSE: 0.4562  (12036 frames)
+  - nick         Boost Acc:  79.41%  RMSE: 0.4550  (12347 frames)
+  - Martin       Boost Acc:  76.51%  RMSE: 0.4828  (2942 frames)
+
+📁 Output: training_20251027_232214
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251027_233611 (2025-10-27 23:36:13)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 1 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 144254
+
+🎯 Key Results:
+  Direction RMSE (test):  0.4268
+  Angular Error (test):   29.17°
+  Boost Accuracy (test):  81.64%
+  Overall MSE (test):     0.170291
+  MSE Ratio (test/train): 1.186
+
+👥 Per-User Performance:
+  - michele      Boost Acc:  92.96%  RMSE: 0.4251  (582 frames)
+  - Riccardo     Boost Acc:  83.25%  RMSE: 0.4268  (12036 frames)
+  - nick         Boost Acc:  80.21%  RMSE: 0.4220  (12347 frames)
+  - Martin       Boost Acc:  78.82%  RMSE: 0.4467  (2942 frames)
+
+📁 Output: training_20251027_233611
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251028_000145 (2025-10-28 00:01:47)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 144263
+
+🎯 Key Results:
+  Direction RMSE (test):  0.3814
+  Angular Error (test):   23.87°
+  Boost Accuracy (test):  83.62%
+  Overall MSE (test):     0.142085
+  MSE Ratio (test/train): 1.216
+
+👥 Per-User Performance:
+  - michele      Boost Acc:  94.86%  RMSE: 0.3788  (486 frames)
+  - Riccardo     Boost Acc:  87.25%  RMSE: 0.3746  (9058 frames)
+  - Martin       Boost Acc:  81.52%  RMSE: 0.3968  (2944 frames)
+  - nick         Boost Acc:  80.75%  RMSE: 0.3829  (11197 frames)
+
+📁 Output: training_20251028_000145
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251028_003142 (2025-10-28 00:31:44)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 144263
+
+🎯 Key Results:
+  Direction RMSE (test):  0.6813
+  Angular Error (test):   71.73°
+  Boost Accuracy (test):  83.54%
+  Overall MSE (test):     0.354611
+  MSE Ratio (test/train): 1.266
+
+👥 Per-User Performance:
+  - michele      Boost Acc:  94.24%  RMSE: 0.7700  (486 frames)
+  - Riccardo     Boost Acc:  86.77%  RMSE: 0.6961  (9058 frames)
+  - Martin       Boost Acc:  81.86%  RMSE: 0.6849  (2944 frames)
+  - nick         Boost Acc:  80.91%  RMSE: 0.6639  (11197 frames)
+
+📁 Output: training_20251028_003142
+--------------------------------------------------------------------------------

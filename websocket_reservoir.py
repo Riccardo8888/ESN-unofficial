@@ -144,7 +144,9 @@ class ESNControlServer:
         
         # Add angular velocity if model expects it
         if USE_ANGULAR_VELOCITY:
-            current_heading = metadata['heading']
+            # Ricostruisci heading da sin/cos
+            current_heading = np.arctan2(metadata['headingSin'], metadata['headingCos'])
+            
             if self.previous_frame['heading'] is not None:
                 # Calcola cambio angolare con wrapping
                 angular_vel = current_heading - self.previous_frame['heading']
@@ -154,6 +156,9 @@ class ESNControlServer:
             else:
                 angular_vel = 0.0  # First frame
             features_list.append([angular_vel])
+            
+            # Update previous heading
+            self.previous_frame['heading'] = current_heading
         
         # Add distance to border if model expects it
         if USE_DISTANCE_TO_BORDER:
@@ -170,10 +175,9 @@ class ESNControlServer:
             else:
                 distance_vel = 0.0  # First frame
             features_list.append([distance_vel])
-        
-        # Update previous frame values for next iteration
-        self.previous_frame['heading'] = metadata['heading']
-        self.previous_frame['distanceToBorder'] = metadata['distanceToBorder']
+            
+            # Update previous distance
+            self.previous_frame['distanceToBorder'] = current_distance
         
         # NOTE: snake_length is NOT included in the current model
         # This matches the data_loader.py logic which doesn't add snake_length
@@ -224,37 +228,67 @@ class ESNControlServer:
         Returns:
             Command dictionary
         """
-        # Current heading
+        # Current heading (solo per logging, non serve per il calcolo!)
         current_heading = frame_data['metadata']['heading']
         
-        # Predicted angle (from mx, my vector)
-        predicted_angle = np.arctan2(my_pred, mx_pred)
+        # IMPORTANTE: (mx, my) sono già coordinate RELATIVE al canvas del giocatore
+        # che ruota insieme al serpente. Quindi l'angolo calcolato da arctan2(my, mx)
+        # È GIÀ il delta angolare relativo, non serve sottrarre current_heading!
+        angle_delta = np.arctan2(my_pred, mx_pred)
         
-        # Calculate angleDelta
-        angle_delta = predicted_angle - current_heading
+        # Calculate confidence from magnitude of (mx, my) vector
+        # Low magnitude = low confidence = reduce angle change
+        confidence = np.sqrt(mx_pred**2 + my_pred**2)
+        
+        # Confidence scaling: 
+        # confidence < 0.3 → scale down aggressively (min 0.1x)
+        # confidence > 0.8 → full angle change (1.0x)
+        MIN_CONFIDENCE = 0.3  # Below this, scale to minimum
+        MAX_CONFIDENCE = 1.2  # Above this, no scaling
+        MIN_SCALE = 0.1       # Minimum scaling factor
+        
+        if confidence < MIN_CONFIDENCE:
+            confidence_scale = MIN_SCALE
+        elif confidence > MAX_CONFIDENCE:
+            confidence_scale = 1.0
+        else:
+            # Linear interpolation between MIN_SCALE and 1.0
+            confidence_scale = MIN_SCALE + (1.0 - MIN_SCALE) * \
+                             (confidence - MIN_CONFIDENCE) / (MAX_CONFIDENCE - MIN_CONFIDENCE)
         
         # Normalize to [-π, π]
         angle_delta = np.arctan2(np.sin(angle_delta), np.cos(angle_delta))
         
-        # CLAMP angle delta to prevent extreme turns (max ±45° per frame)
-        MAX_ANGLE_DELTA = np.radians(45)  # ±45° max
-        if abs(angle_delta) > MAX_ANGLE_DELTA:
-            angle_delta = np.sign(angle_delta) * MAX_ANGLE_DELTA
-            # Log when clamping happens
-            if self.stats['frames_processed'] % 10 == 0:
-                print(f"⚠️  Clamped large angleDelta from {np.degrees(predicted_angle - current_heading):.1f}° to {np.degrees(angle_delta):.1f}°")
+        # Apply confidence scaling BEFORE clamping
+        angle_delta_scaled = angle_delta * confidence_scale
+
+        # CLAMP angle delta to prevent extreme turns (max ±180° per frame)
+        MAX_ANGLE_DELTA = np.radians(180)  # ±180° max
+        if abs(angle_delta_scaled) > MAX_ANGLE_DELTA:
+            angle_delta_scaled = np.sign(angle_delta_scaled) * MAX_ANGLE_DELTA
+            # Log when clamping happens (less frequent now with confidence scaling)
+            if self.stats['frames_processed'] % 50 == 0:
+                print(f"⚠️  Clamped large angleDelta from {np.degrees(angle_delta):.1f}° to {np.degrees(angle_delta_scaled):.1f}°")
+        
+        angle_delta = angle_delta_scaled
         
         # Boost decision (LOWERED threshold to 0.45 due to model bias)
         boost_decision = (boost_prob > 0.45)
         
-        # Confidence (distance from threshold)
-        confidence = boost_prob if boost_decision else (1.0 - boost_prob)
+        # Boost confidence (distance from threshold)
+        boost_confidence = boost_prob if boost_decision else (1.0 - boost_prob)
+        
+        # Calculate predicted angle for logging (angle_delta + current_heading)
+        predicted_angle_abs = current_heading + angle_delta
+        predicted_angle_abs = np.arctan2(np.sin(predicted_angle_abs), np.cos(predicted_angle_abs))
         
         return {
             'angleDelta': float(angle_delta),
             'boost': bool(boost_decision),
-            'confidence': float(confidence),
-            'predictedAngle': float(predicted_angle)
+            'confidence': float(boost_confidence),
+            'predictedAngle': float(predicted_angle_abs),  # For logging only
+            'directionConfidence': float(confidence),  # Magnitude-based confidence
+            'confidenceScale': float(confidence_scale)  # Scaling factor applied
         }
     
     def process_frame(self, message: str) -> str:
@@ -314,11 +348,16 @@ class ESNControlServer:
         angle_delta_deg = np.degrees(command['angleDelta'])
         predicted_angle_deg = np.degrees(command['predictedAngle'])
         boost_str = "true " if command['boost'] else "false"
+        dir_conf = command['directionConfidence']
+        conf_scale = command['confidenceScale']
+        
+        # Color coding based on direction confidence
+        conf_emoji = "🟢" if dir_conf > 0.8 else "🟡" if dir_conf > 0.5 else "🟠" if dir_conf > 0.3 else "🔴"
         
         print(f"📤 Predicted: {predicted_angle_deg:+7.2f}° | "
-              f"Delta: {angle_delta_deg:+7.2f}° | "
+              f"Delta: {angle_delta_deg:+7.2f}° ({conf_scale:.2f}x) | "
               f"BOOST {boost_str} | "
-              f"Conf: {command['confidence']:.2f} | "
+              f"{conf_emoji} DirConf: {dir_conf:.3f} | "
               f"mx: {mx_pred:+.3f}, my: {my_pred:+.3f}")
         
         # Log statistics every 50 frames
