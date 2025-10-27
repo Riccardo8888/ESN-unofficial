@@ -1,0 +1,24 @@
+{
+    "end_time": 1761580243.024095,
+    "errors": 0,
+    "final_stats": {
+        "avg_velocity": 400.95903502361904,
+        "boost_time": 197.80309999993437,
+        "game_radius": 21600,
+        "total_enemies_seen": 2030492,
+        "total_food_seen": 2607519
+    },
+    "frame_count": 2271,
+    "frames_written": 19309,
+    "last_update": 1761580243.022539,
+    "session_id": "1761515380508",
+    "start_time": 1761515380.615937,
+    "stats": {
+        "avg_velocity": 400.95903502361904,
+        "boost_time": 197.80309999993437,
+        "game_radius": 21600,
+        "total_enemies_seen": 2030492,
+        "total_food_seen": 2607519
+    },
+    "valid_frames": 2271
+}

@@ -142,3 +142,39 @@ Training Configuration:
 
 📁 Output: training_20251027_203012
 --------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251027_210927 (2025-10-27 21:09:28)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 1 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 142007
+
+🎯 Key Results:
+  Direction RMSE (test):  0.4350
+  Angular Error (test):   30.98°
+  Boost Accuracy (test):  80.90%
+  Overall MSE (test):     0.176345
+  MSE Ratio (test/train): 1.202
+
+👥 Per-User Performance:
+  - michele      Boost Acc:  90.38%  RMSE: 0.4233  (582 frames)
+  - Riccardo     Boost Acc:  83.88%  RMSE: 0.4244  (12036 frames)
+  - nick         Boost Acc:  78.18%  RMSE: 0.4325  (11186 frames)
+  - Martin       Boost Acc:  77.94%  RMSE: 0.4559  (2942 frames)
+  -              Boost Acc:  77.23%  RMSE: 0.5750  (606 frames)
+
+📁 Output: training_20251027_210927
+--------------------------------------------------------------------------------

@@ -2,8 +2,8 @@
   "session_id": "1761580309746",
   "username": "nick",
   "client_ip": "127.0.0.1",
-  "start_time": 1761589189.2298188,
-  "start_time_iso": "2025-10-27T19:19:49.229819",
+  "start_time": 1761594066.309263,
+  "start_time_iso": "2025-10-27T20:41:06.309263",
   "config": {
     "ANGULAR_BINS": 64,
     "RADIAL_BINS": 24,

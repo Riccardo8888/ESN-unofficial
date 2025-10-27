@@ -31,6 +31,20 @@ class Reservoir:
         # compute the spectral radius
         return max(abs(np.linalg.eig(self.w)[0]))
 
+    def update(self, ut, x):
+        """
+        Update reservoir state with a single input.
+        
+        Args:
+            ut: Input vector at time t [n_inputs]
+            x: Current reservoir state [n_neurons]
+            
+        Returns:
+            Updated reservoir state [n_neurons]
+        """
+        x_next = np.tanh(self.win @ np.concatenate((ut, [1])) + self.w @ x)
+        x = (1. - self.leak) * x + self.leak * x_next
+        return x
 
     def forward(self, u, wout=None, collect_states=False):
         n_timesteps = u.shape[0]
