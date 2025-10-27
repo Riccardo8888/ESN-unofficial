@@ -1,0 +1,79 @@
+{
+  "timestamp": "20251027_162615",
+  "config": {
+    "prediction_horizon": 5,
+    "n_reservoir": 1000,
+    "spectral_radius": 1.25,
+    "input_scale": 1.0,
+    "leak_rate_min": 0.1,
+    "leak_rate_max": 0.3,
+    "alpha": 0.001,
+    "washout": 50,
+    "test_split": 0.2,
+    "random_seed": 42,
+    "approach": "reservoir.py (same as humand_data.ipynb)"
+  },
+  "data": {
+    "train_sessions": [
+      "session_1759343160564",
+      "session_1761515380508"
+    ],
+    "test_sessions": [
+      "session_1761510848309"
+    ],
+    "n_train_frames": 15864,
+    "n_test_frames": 14204,
+    "input_dim": 6148,
+    "output_dim": 3
+  },
+  "training": {
+    "overall_mse": 0.18934571319126683,
+    "mse_mx": 0.21707151252930562,
+    "mse_my": 0.22411670238560183,
+    "mse_direction": 0.22059410745745373,
+    "rmse_mx": 0.46590933938836815,
+    "rmse_my": 0.47340965599108964,
+    "rmse_direction": 0.46967446966750676,
+    "mae_mx": 0.37143849367698484,
+    "mae_my": 0.3779931665732698,
+    "mae_direction": 0.3747158301251273,
+    "angular_error_rad": 0.6026614389081041,
+    "angular_error_deg": 34.52995692471566,
+    "boost_accuracy": 0.8335651953964841,
+    "boost_precision": 0.8368513227025455,
+    "boost_recall": 0.9132884015692494,
+    "boost_f1": 0.8734006733507603,
+    "boost_mse": 0.12684892465889291,
+    "boost_true_mean": 0.6286202073097229,
+    "boost_pred_mean": 0.6287707983128515,
+    "tp": 9079,
+    "tn": 4103,
+    "fp": 1770,
+    "fn": 862
+  },
+  "test": {
+    "overall_mse": 0.42617954677966613,
+    "mse_mx": 0.44322801357414976,
+    "mse_my": 0.5078595260150777,
+    "mse_direction": 0.4755437697946137,
+    "rmse_mx": 0.6657537184080535,
+    "rmse_my": 0.7126426355580178,
+    "rmse_direction": 0.689596816839096,
+    "mae_mx": 0.5390001187240505,
+    "mae_my": 0.5746072272700993,
+    "mae_direction": 0.5568036729970749,
+    "angular_error_rad": 1.1146117353615144,
+    "angular_error_deg": 63.86254823196739,
+    "boost_accuracy": 0.5399886957750459,
+    "boost_precision": 0.33458373668925057,
+    "boost_recall": 0.7320624834524562,
+    "boost_f1": 0.459264180672823,
+    "boost_mse": 0.32745110074977113,
+    "boost_true_mean": 0.2668503522872925,
+    "boost_pred_mean": 0.5644693025755063,
+    "tp": 2765,
+    "tn": 4878,
+    "fp": 5499,
+    "fn": 1012
+  }
+}
