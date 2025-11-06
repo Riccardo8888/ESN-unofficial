@@ -129,7 +129,7 @@ class ConnectomeReservoir:
                 raise ValueError(f"x0 has {x0.shape[0]} dims; expected {self.n_neurons}")
             self.x = x0
         return self.x
-
+    
     def forward(self, u, collect_states=False, wout=None):
         #run reservoir forward in time
 

@@ -115,6 +115,8 @@ class Reservoir2:
             return Y
         elif collect_states:
             return X
+
+
   
         
 class Reservoir3:
@@ -171,3 +173,5 @@ class Reservoir3:
             return Y
         elif collect_states:
             return X
+        
+
