@@ -458,3 +458,1061 @@ Training Configuration:
 
 📁 Output: training_20251028_003142
 --------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251028_094543 (2025-10-28 09:45:45)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 156949
+
+🎯 Key Results:
+  Direction RMSE (test):  0.6790
+  Angular Error (test):   71.50°
+  Boost Accuracy (test):  84.61%
+  Overall MSE (test):     0.349487
+  MSE Ratio (test/train): 1.238
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  89.82%  RMSE: 0.6423  (953 frames)
+  - michele      Boost Acc:  89.52%  RMSE: 0.6299  (582 frames)
+  - Riccardo     Boost Acc:  87.80%  RMSE: 0.7003  (12036 frames)
+  - nick         Boost Acc:  82.36%  RMSE: 0.6651  (12785 frames)
+  - Martin       Boost Acc:  78.89%  RMSE: 0.6718  (3079 frames)
+
+📁 Output: training_20251028_094543
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251028_101334 (2025-10-28 10:13:37)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 161824
+
+🎯 Key Results:
+  Direction RMSE (test):  0.6823
+  Angular Error (test):   71.66°
+  Boost Accuracy (test):  84.05%
+  Overall MSE (test):     0.353377
+  MSE Ratio (test/train): 1.271
+
+👥 Per-User Performance:
+  - michele      Boost Acc:  95.58%  RMSE: 0.7569  (565 frames)
+  - AI_bot       Boost Acc:  92.07%  RMSE: 0.6192  (1753 frames)
+  - Riccardo     Boost Acc:  84.61%  RMSE: 0.7026  (10233 frames)
+  - nick         Boost Acc:  83.20%  RMSE: 0.6746  (14582 frames)
+  - Martin       Boost Acc:  79.19%  RMSE: 0.6690  (2825 frames)
+
+📁 Output: training_20251028_101334
+--------------------------------------------------------------------------------
+--dopo giornata
+
+================================================================================
+Training: 20251028_201249 (2025-10-28 20:12:51)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 205428
+
+🎯 Key Results:
+  Direction RMSE (test):  0.6632
+  Angular Error (test):   67.34°
+  Boost Accuracy (test):  86.53%
+  Overall MSE (test):     0.332567
+  MSE Ratio (test/train): 1.213
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  95.79%  RMSE: 0.4892  (4912 frames)
+  - michele      Boost Acc:  95.36%  RMSE: 0.7637  (582 frames)
+  - MicheleMatozza Boost Acc:  92.23%  RMSE: 0.6926  (3219 frames)
+  - Riccardo     Boost Acc:  85.49%  RMSE: 0.7067  (9625 frames)
+  - nick         Boost Acc:  84.09%  RMSE: 0.6648  (14126 frames)
+  - Martin       Boost Acc:  81.74%  RMSE: 0.7030  (2119 frames)
+  - Martin copy  Boost Acc:  77.74%  RMSE: 0.6552  (1096 frames)
+  - anonymous    Boost Acc:  74.75%  RMSE: 0.7810  (396 frames)
+
+📁 Output: training_20251028_201249
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_094412 (2025-10-30 09:44:15)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 332390
+
+🎯 Key Results:
+  Direction RMSE (test):  0.6576
+  Angular Error (test):   68.23°
+  Boost Accuracy (test):  87.26%
+  Overall MSE (test):     0.324524
+  MSE Ratio (test/train): 1.141
+
+👥 Per-User Performance:
+  - Matteo_Giardina_BAINSA Boost Acc:  95.58%  RMSE: 0.6845  (8164 frames)
+  - MicheleMatozza Boost Acc:  93.79%  RMSE: 0.6762  (8810 frames)
+  - michele      Boost Acc:  93.64%  RMSE: 0.6864  (582 frames)
+  - AI_bot       Boost Acc:  92.43%  RMSE: 0.4970  (7083 frames)
+  - nicko        Boost Acc:  86.73%  RMSE: 0.6548  (2736 frames)
+  - Riccardo     Boost Acc:  84.33%  RMSE: 0.6819  (12036 frames)
+  - anonymous    Boost Acc:  83.92%  RMSE: 0.6182  (3140 frames)
+  - nick         Boost Acc:  83.18%  RMSE: 0.6817  (13461 frames)
+  - nickmartin   Boost Acc:  79.39%  RMSE: 0.6769  (2392 frames)
+  - Martin       Boost Acc:  76.26%  RMSE: 0.6685  (4095 frames)
+
+📁 Output: training_20251030_094412
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_181602 (2025-10-30 18:16:05)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 356989
+
+🎯 Key Results:
+  Direction RMSE (test):  0.6579
+  Angular Error (test):   68.95°
+  Boost Accuracy (test):  86.91%
+  Overall MSE (test):     0.325827
+  MSE Ratio (test/train): 1.133
+
+👥 Per-User Performance:
+  - Matteo_Giardina_BAINSA Boost Acc:  95.57%  RMSE: 0.6814  (7967 frames)
+  - MicheleMatozza Boost Acc:  92.52%  RMSE: 0.6807  (8800 frames)
+  - michele      Boost Acc:  91.85%  RMSE: 0.6908  (503 frames)
+  - AI_bot       Boost Acc:  91.78%  RMSE: 0.5172  (7083 frames)
+  - nickmartin   Boost Acc:  88.63%  RMSE: 0.6724  (2418 frames)
+  - nicko        Boost Acc:  87.32%  RMSE: 0.6664  (4069 frames)
+  - anonymous    Boost Acc:  84.36%  RMSE: 0.6232  (3044 frames)
+  - Riccardo     Boost Acc:  84.01%  RMSE: 0.6790  (12036 frames)
+  - nick         Boost Acc:  81.98%  RMSE: 0.6679  (14931 frames)
+  - Martin       Boost Acc:  80.59%  RMSE: 0.6722  (7057 frames)
+
+📁 Output: training_20251030_181602
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_215424 (2025-10-30 21:54:25)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 37779
+
+🎯 Key Results:
+
+================================================================================
+Training: 20251030_215808 (2025-10-30 21:58:09)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 37779
+
+🎯 Key Results:
+  Angle Accuracy (test):  11.11%
+  Top-3 Accuracy (test):  26.36%
+  Angular Error (test):   28.71°
+  Boost Accuracy (test):  93.22%
+  Error Ratio (test/train): 1.647
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  99.79%  Angle Acc:  11.11%  (7083 frames)
+
+📁 Output: training_20251030_215808
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_221303 (2025-10-30 22:13:07)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 356989
+
+🎯 Key Results:
+  Angle Accuracy (test):  31.96%
+  Top-3 Accuracy (test):  47.45%
+  Angular Error (test):   40.09°
+  Boost Accuracy (test):  87.30%
+  Error Ratio (test/train): 1.107
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  99.79%  Angle Acc:  10.31%  (7083 frames)
+  - nickmartin   Boost Acc:  99.38%  Angle Acc:  36.23%  (2418 frames)
+  - Martin       Boost Acc:  98.82%  Angle Acc:  32.01%  (7057 frames)
+  - michele      Boost Acc:  98.81%  Angle Acc:  28.83%  (503 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.62%  Angle Acc:  34.57%  (7967 frames)
+  - nick         Boost Acc:  98.36%  Angle Acc:  32.48%  (14931 frames)
+  - Riccardo     Boost Acc:  98.22%  Angle Acc:  35.63%  (12036 frames)
+  - MicheleMatozza Boost Acc:  97.98%  Angle Acc:  35.39%  (8800 frames)
+  - anonymous    Boost Acc:  97.83%  Angle Acc:  35.32%  (3044 frames)
+  - nicko        Boost Acc:  96.24%  Angle Acc:  39.59%  (4069 frames)
+
+📁 Output: training_20251030_221303
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_230537 (2025-10-30 23:05:40)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 187148
+
+🎯 Key Results:
+  Angle Accuracy (test):  28.46%
+  Top-3 Accuracy (test):  44.13%
+  Angular Error (test):   41.13°
+  Boost Accuracy (test):  83.70%
+  Error Ratio (test/train): 1.197
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  99.79%  Angle Acc:  12.92%  (7083 frames)
+  - Martin       Boost Acc:  98.82%  Angle Acc:  30.10%  (7057 frames)
+  - nickmartin   Boost Acc:  98.52%  Angle Acc:  34.06%  (2237 frames)
+  - nick         Boost Acc:  98.39%  Angle Acc:  31.24%  (13943 frames)
+  - nicko        Boost Acc:  95.26%  Angle Acc:  40.55%  (3906 frames)
+
+📁 Output: training_20251030_230537
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_231153 (2025-10-30 23:11:55)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 139693
+
+🎯 Key Results:
+  Angle Accuracy (test):  25.27%
+  Top-3 Accuracy (test):  40.66%
+  Angular Error (test):   40.25°
+  Boost Accuracy (test):  89.30%
+  Error Ratio (test/train): 1.216
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  99.60%  Angle Acc:  15.82%  (8830 frames)
+  - nick         Boost Acc:  99.47%  Angle Acc:  30.13%  (375 frames)
+  - matteo       Boost Acc:  99.16%  Angle Acc:  21.43%  (714 frames)
+  - anonymous    Boost Acc:  99.13%  Angle Acc:  30.61%  (1614 frames)
+  - nickmartin   Boost Acc:  99.01%  Angle Acc:  24.75%  (1620 frames)
+  - nicko        Boost Acc:  98.66%  Angle Acc:  28.33%  (1860 frames)
+  - Martin       Boost Acc:  98.39%  Angle Acc:  27.93%  (2481 frames)
+  - MicheleMatozza Boost Acc:  98.28%  Angle Acc:  29.43%  (4060 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  97.94%  Angle Acc:  38.27%  (3643 frames)
+
+📁 Output: training_20251030_231153
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251030_234157 (2025-10-30 23:42:00)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 239061
+
+🎯 Key Results:
+  Angle Accuracy (test):  24.69%
+  Top-3 Accuracy (test):  41.28%
+  Angular Error (test):   39.27°
+  Boost Accuracy (test):  89.89%
+  Error Ratio (test/train): 1.137
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  99.64%  Angle Acc:  15.73%  (19343 frames)
+  - nick         Boost Acc:  99.10%  Angle Acc:  39.52%  (334 frames)
+  - matteo       Boost Acc:  99.00%  Angle Acc:  31.06%  (1098 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.81%  Angle Acc:  30.35%  (6149 frames)
+  - Martin       Boost Acc:  98.72%  Angle Acc:  34.36%  (3603 frames)
+  - nicko        Boost Acc:  98.54%  Angle Acc:  31.11%  (3012 frames)
+  - nickmartin   Boost Acc:  98.22%  Angle Acc:  34.55%  (2081 frames)
+  - MicheleMatozza Boost Acc:  97.57%  Angle Acc:  31.08%  (7047 frames)
+  - anonymous    Boost Acc:  96.72%  Angle Acc:  28.53%  (1798 frames)
+
+📁 Output: training_20251030_234157
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_000942 (2025-10-31 00:09:46)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 2000
+  - Spectral radius: 1.0
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 148145
+
+🎯 Key Results:
+  Angle Accuracy (test):  24.89%
+  Top-3 Accuracy (test):  40.39%
+  Angular Error (test):   45.07°
+  Boost Accuracy (test):  89.25%
+  Error Ratio (test/train): 1.264
+
+👥 Per-User Performance:
+  - matteo       Boost Acc:  99.76%  Angle Acc:  19.86%  (418 frames)
+  - nick         Boost Acc:  99.72%  Angle Acc:  41.36%  (353 frames)
+  - AI_bot       Boost Acc:  99.38%  Angle Acc:  13.70%  (10883 frames)
+  - Martin       Boost Acc:  99.16%  Angle Acc:  26.99%  (2608 frames)
+  - anonymous    Boost Acc:  99.12%  Angle Acc:  33.74%  (1485 frames)
+  - nickmartin   Boost Acc:  99.00%  Angle Acc:  32.45%  (1501 frames)
+  - MicheleMatozza Boost Acc:  98.86%  Angle Acc:  33.58%  (4479 frames)
+  - nicko        Boost Acc:  98.51%  Angle Acc:  29.07%  (1947 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.46%  Angle Acc:  36.84%  (3439 frames)
+
+📁 Output: training_20251031_000942
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_002427 (2025-10-31 00:24:30)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 148145
+
+🎯 Key Results:
+  Angle Accuracy (test):  31.75%
+  Top-3 Accuracy (test):  47.57%
+  Angular Error (test):   35.83°
+  Boost Accuracy (test):  88.95%
+  Error Ratio (test/train): 1.165
+
+👥 Per-User Performance:
+  - MicheleMatozza Boost Acc:  99.04%  Angle Acc:  43.51%  (4479 frames)
+  - Martin       Boost Acc:  98.96%  Angle Acc:  35.39%  (2608 frames)
+  - nickmartin   Boost Acc:  98.93%  Angle Acc:  40.71%  (1501 frames)
+  - AI_bot       Boost Acc:  98.81%  Angle Acc:  15.62%  (10883 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.31%  Angle Acc:  47.11%  (3439 frames)
+  - nick         Boost Acc:  98.30%  Angle Acc:  47.59%  (353 frames)
+  - matteo       Boost Acc:  98.09%  Angle Acc:  37.08%  (418 frames)
+  - anonymous    Boost Acc:  97.91%  Angle Acc:  42.96%  (1485 frames)
+  - nicko        Boost Acc:  97.33%  Angle Acc:  43.40%  (1947 frames)
+
+📁 Output: training_20251031_002427
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_003004 (2025-10-31 00:30:06)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 148145
+
+🎯 Key Results:
+  Angle Accuracy (test):  47.50%
+  Top-3 Accuracy (test):  64.07%
+  Angular Error (test):   19.54°
+  Boost Accuracy (test):  88.95%
+  Error Ratio (test/train): 1.092
+
+👥 Per-User Performance:
+  - matteo       Boost Acc:  99.04%  Angle Acc:  52.39%  (418 frames)
+  - MicheleMatozza Boost Acc:  99.04%  Angle Acc:  64.43%  (4479 frames)
+  - nickmartin   Boost Acc:  98.47%  Angle Acc:  53.16%  (1501 frames)
+  - Martin       Boost Acc:  98.47%  Angle Acc:  56.37%  (2608 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.02%  Angle Acc:  69.38%  (3439 frames)
+  - nick         Boost Acc:  97.73%  Angle Acc:  59.49%  (353 frames)
+  - nicko        Boost Acc:  97.33%  Angle Acc:  64.61%  (1947 frames)
+  - anonymous    Boost Acc:  96.84%  Angle Acc:  63.57%  (1485 frames)
+  - AI_bot       Boost Acc:  93.89%  Angle Acc:  24.89%  (10883 frames)
+
+📁 Output: training_20251031_003004
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_090613 (2025-10-31 09:06:16)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 160031
+
+🎯 Key Results:
+  Angle Accuracy (test):  44.90%
+  Top-3 Accuracy (test):  62.58%
+  Angular Error (test):   20.97°
+  Boost Accuracy (test):  90.13%
+  Error Ratio (test/train): 1.099
+
+👥 Per-User Performance:
+  - matteo       Boost Acc:  99.42%  Angle Acc:  41.62%  (346 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  99.22%  Angle Acc:  66.09%  (3353 frames)
+  - nick         Boost Acc:  99.20%  Angle Acc:  61.07%  (375 frames)
+  - MicheleMatozza Boost Acc:  98.99%  Angle Acc:  64.50%  (3577 frames)
+  - anonymous    Boost Acc:  98.97%  Angle Acc:  65.81%  (1553 frames)
+  - nickmartin   Boost Acc:  98.69%  Angle Acc:  62.65%  (996 frames)
+  - Martin       Boost Acc:  97.85%  Angle Acc:  59.77%  (2329 frames)
+  - nicko        Boost Acc:  97.27%  Angle Acc:  61.99%  (1976 frames)
+  - AI_bot       Boost Acc:  95.59%  Angle Acc:  27.77%  (15450 frames)
+
+📁 Output: training_20251031_090613
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_092629 (2025-10-31 09:26:31)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 127323
+
+🎯 Key Results:
+  Angle Accuracy (test):  42.74%
+  Top-3 Accuracy (test):  60.50%
+  Angular Error (test):   21.72°
+  Boost Accuracy (test):  89.08%
+  Error Ratio (test/train): 1.130
+
+👥 Per-User Performance:
+  - matteo       Boost Acc:  99.21%  Angle Acc:  62.70%  (126 frames)
+  - nick         Boost Acc:  98.93%  Angle Acc:  60.53%  (375 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.84%  Angle Acc:  63.73%  (1034 frames)
+  - nickmartin   Boost Acc:  98.65%  Angle Acc:  47.43%  (816 frames)
+  - MicheleMatozza Boost Acc:  98.64%  Angle Acc:  66.70%  (3015 frames)
+  - Martin       Boost Acc:  98.26%  Angle Acc:  50.92%  (1844 frames)
+  - nicko        Boost Acc:  98.01%  Angle Acc:  63.03%  (2010 frames)
+  - anonymous    Boost Acc:  97.52%  Angle Acc:  60.73%  (1533 frames)
+  - AI_bot       Boost Acc:  95.56%  Angle Acc:  27.50%  (12500 frames)
+
+📁 Output: training_20251031_092629
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_182554 (2025-10-31 18:25:57)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 1500
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 185117
+
+🎯 Key Results:
+  Angle Accuracy (test):  33.55%
+  Top-3 Accuracy (test):  55.10%
+  Angular Error (test):   20.97°
+  Boost Accuracy (test):  93.69%
+  Error Ratio (test/train): 1.065
+
+👥 Per-User Performance:
+  - nick         Boost Acc:  99.73%  Angle Acc:  51.47%  (375 frames)
+  - nickmartin   Boost Acc:  99.50%  Angle Acc:  58.21%  (201 frames)
+  - nicko        Boost Acc:  99.49%  Angle Acc:  65.36%  (1943 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  99.37%  Angle Acc:  70.90%  (1117 frames)
+  - Martin       Boost Acc:  97.76%  Angle Acc:  58.06%  (2053 frames)
+  - MicheleMatozza Boost Acc:  97.75%  Angle Acc:  61.67%  (1688 frames)
+  - anonymous    Boost Acc:  96.75%  Angle Acc:  62.72%  (1352 frames)
+  - AI_bot       Boost Acc:  95.53%  Angle Acc:  23.57%  (25295 frames)
+
+📁 Output: training_20251031_182554
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_183847 (2025-10-31 18:38:55)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 2500
+  - Spectral radius: 1.1
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 185117
+
+🎯 Key Results:
+  Angle Accuracy (test):  33.94%
+  Top-3 Accuracy (test):  54.91%
+  Angular Error (test):   20.56°
+  Boost Accuracy (test):  93.84%
+  Error Ratio (test/train): 1.117
+
+👥 Per-User Performance:
+  - nick         Boost Acc:  99.73%  Angle Acc:  51.73%  (375 frames)
+  - nickmartin   Boost Acc:  99.50%  Angle Acc:  59.70%  (201 frames)
+  - nicko        Boost Acc:  99.49%  Angle Acc:  66.34%  (1943 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  99.37%  Angle Acc:  71.35%  (1117 frames)
+  - Martin       Boost Acc:  97.76%  Angle Acc:  57.62%  (2053 frames)
+  - MicheleMatozza Boost Acc:  97.75%  Angle Acc:  62.09%  (1688 frames)
+  - anonymous    Boost Acc:  96.75%  Angle Acc:  60.95%  (1352 frames)
+  - AI_bot       Boost Acc:  95.53%  Angle Acc:  24.09%  (25295 frames)
+
+📁 Output: training_20251031_183847
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_185842 (2025-10-31 18:58:52)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 190075
+
+🎯 Key Results:
+  Angle Accuracy (test):  34.12%
+  Top-3 Accuracy (test):  54.61%
+  Angular Error (test):   20.21°
+  Boost Accuracy (test):  94.34%
+  Error Ratio (test/train): 1.121
+
+👥 Per-User Performance:
+  - nicko        Boost Acc:  98.72%  Angle Acc:  60.58%  (3356 frames)
+  - Martin       Boost Acc:  98.47%  Angle Acc:  57.11%  (1963 frames)
+  - nickmartin   Boost Acc:  97.83%  Angle Acc:  34.24%  (184 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  97.36%  Angle Acc:  66.58%  (1212 frames)
+  - nick         Boost Acc:  97.33%  Angle Acc:  49.87%  (375 frames)
+  - MicheleMatozza Boost Acc:  96.18%  Angle Acc:  50.05%  (1884 frames)
+  - AI_bot       Boost Acc:  95.60%  Angle Acc:  24.35%  (25112 frames)
+  - anonymous    Boost Acc:  95.30%  Angle Acc:  62.71%  (1255 frames)
+
+📁 Output: training_20251031_185842
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251031_194436 (2025-10-31 19:44:47)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 191059
+
+🎯 Key Results:
+  Angle Accuracy (test):  33.05%
+  Top-3 Accuracy (test):  53.85%
+  Angular Error (test):   20.44°
+  Boost Accuracy (test):  94.76%
+  Error Ratio (test/train): 1.117
+
+👥 Per-User Performance:
+  - nickmartin   Boost Acc:  99.25%  Angle Acc:  41.95%  (267 frames)
+  - Martin       Boost Acc:  99.03%  Angle Acc:  58.51%  (1651 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.59%  Angle Acc:  69.91%  (638 frames)
+  - MicheleMatozza Boost Acc:  98.40%  Angle Acc:  63.04%  (1937 frames)
+  - nicko        Boost Acc:  98.24%  Angle Acc:  60.32%  (4141 frames)
+  - AI_bot       Boost Acc:  95.47%  Angle Acc:  23.97%  (26680 frames)
+  - anonymous    Boost Acc:  84.92%  Angle Acc:  50.75%  (199 frames)
+
+📁 Output: training_20251031_194436
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251102_200249 (2025-11-02 20:03:01)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 124433
+
+🎯 Key Results:
+  Angle Accuracy (test):  35.63%
+  Top-3 Accuracy (test):  53.24%
+  Angular Error (test):   20.93°
+  Boost Accuracy (test):  96.11%
+  Error Ratio (test/train): 1.169
+
+👥 Per-User Performance:
+  - Matteo_Giardina_BAINSA Boost Acc:  98.73%  Angle Acc:  61.72%  (708 frames)
+  - Martin       Boost Acc:  98.65%  Angle Acc:  70.27%  (370 frames)
+  - MicheleMatozza Boost Acc:  98.47%  Angle Acc:  67.23%  (1303 frames)
+  - nicko        Boost Acc:  97.57%  Angle Acc:  61.20%  (2469 frames)
+  - nickmartin   Boost Acc:  96.25%  Angle Acc:  58.43%  (267 frames)
+  - AI_bot       Boost Acc:  95.86%  Angle Acc:  27.51%  (17928 frames)
+  - anonymous    Boost Acc:  94.76%  Angle Acc:  54.29%  (210 frames)
+
+📁 Output: training_20251102_200249
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251102_204352 (2025-11-02 20:49:16)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 400034
+
+🎯 Key Results:
+  Angle Accuracy (test):  28.96%
+  Top-3 Accuracy (test):  49.94%
+  Angular Error (test):   20.82°
+  Boost Accuracy (test):  99.24%
+  Error Ratio (test/train): 1.061
+
+👥 Per-User Performance:
+  - AI_bot       Boost Acc:  95.55%  Angle Acc:  28.96%  (73706 frames)
+
+📁 Output: training_20251102_204352
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251102_221416 (2025-11-02 22:26:30)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 5000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 452697
+
+🎯 Key Results:
+  Angle Accuracy (test):  32.46%
+  Top-3 Accuracy (test):  52.68%
+  Angular Error (test):   19.97°
+  Boost Accuracy (test):  97.55%
+  Error Ratio (test/train): 1.078
+
+👥 Per-User Performance:
+  - nicko        Boost Acc:  99.12%  Angle Acc:  65.81%  (4224 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.73%  Angle Acc:  59.46%  (708 frames)
+  - Martin       Boost Acc:  98.61%  Angle Acc:  57.75%  (1730 frames)
+  - MicheleMatozza Boost Acc:  98.35%  Angle Acc:  58.12%  (1877 frames)
+  - AI_bot       Boost Acc:  95.69%  Angle Acc:  29.02%  (75127 frames)
+  - nickmartin   Boost Acc:  90.73%  Angle Acc:  56.59%  (205 frames)
+  - anonymous    Boost Acc:  86.40%  Angle Acc:  41.23%  (228 frames)
+
+📁 Output: training_20251102_221416
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251102_230239 (2025-11-02 23:03:24)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 5000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 126166
+
+🎯 Key Results:
+  Angle Accuracy (test):  33.73%
+  Top-3 Accuracy (test):  50.71%
+  Angular Error (test):   21.16°
+  Boost Accuracy (test):  96.71%
+  Error Ratio (test/train): 1.304
+
+👥 Per-User Performance:
+  - nickmartin   Boost Acc: 100.00%  Angle Acc:  63.39%  (254 frames)
+  - Martin       Boost Acc:  99.38%  Angle Acc:  45.94%  (320 frames)
+  - nicko        Boost Acc:  99.00%  Angle Acc:  62.02%  (2409 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.31%  Angle Acc:  64.83%  (708 frames)
+  - MicheleMatozza Boost Acc:  97.63%  Angle Acc:  51.18%  (930 frames)
+  - AI_bot       Boost Acc:  95.77%  Angle Acc:  27.17%  (18505 frames)
+  - anonymous    Boost Acc:  91.13%  Angle Acc:  50.74%  (203 frames)
+
+📁 Output: training_20251102_230239
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251102_232920 (2025-11-02 23:29:32)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 129716
+
+🎯 Key Results:
+  Angle Accuracy (test):  35.43%
+  Top-3 Accuracy (test):  52.46%
+  Angular Error (test):   20.99°
+  Boost Accuracy (test):  95.83%
+  Error Ratio (test/train): 1.180
+
+👥 Per-User Performance:
+  - nickmartin   Boost Acc:  99.63%  Angle Acc:  64.79%  (267 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.96%  Angle Acc:  75.30%  (579 frames)
+  - anonymous    Boost Acc:  98.94%  Angle Acc:  56.38%  (188 frames)
+  - MicheleMatozza Boost Acc:  98.44%  Angle Acc:  61.51%  (964 frames)
+  - nicko        Boost Acc:  98.28%  Angle Acc:  57.79%  (3426 frames)
+  - Martin       Boost Acc:  97.62%  Angle Acc:  73.02%  (378 frames)
+  - AI_bot       Boost Acc:  95.74%  Angle Acc:  27.11%  (18119 frames)
+
+📁 Output: training_20251102_232920
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251102_235024 (2025-11-02 23:50:35)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 204399
+
+🎯 Key Results:
+  Angle Accuracy (test):  44.81%
+  Top-3 Accuracy (test):  60.31%
+  Angular Error (test):   18.94°
+  Boost Accuracy (test):  91.50%
+  Error Ratio (test/train): 1.129
+
+👥 Per-User Performance:
+  - Matteo_Giardina_BAINSA Boost Acc:  98.96%  Angle Acc:  75.47%  (579 frames)
+  - anonymous    Boost Acc:  98.94%  Angle Acc:  56.91%  (188 frames)
+  - nicko        Boost Acc:  98.68%  Angle Acc:  59.51%  (3329 frames)
+  - MicheleMatozza Boost Acc:  98.44%  Angle Acc:  64.21%  (964 frames)
+  - nick         Boost Acc:  98.40%  Angle Acc:  63.56%  (11751 frames)
+  - Martin       Boost Acc:  97.62%  Angle Acc:  76.72%  (378 frames)
+  - AI_bot       Boost Acc:  95.74%  Angle Acc:  27.24%  (18119 frames)
+  - nickmartin   Boost Acc:  88.01%  Angle Acc:  38.95%  (267 frames)
+
+📁 Output: training_20251102_235024
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251103_000110 (2025-11-03 00:01:20)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 3000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 129716
+
+🎯 Key Results:
+  Angle Accuracy (test):  35.43%
+  Top-3 Accuracy (test):  52.46%
+  Angular Error (test):   20.99°
+  Boost Accuracy (test):  95.83%
+  Error Ratio (test/train): 1.180
+
+👥 Per-User Performance:
+  - nickmartin   Boost Acc:  99.63%  Angle Acc:  64.79%  (267 frames)
+  - Matteo_Giardina_BAINSA Boost Acc:  98.96%  Angle Acc:  75.30%  (579 frames)
+  - anonymous    Boost Acc:  98.94%  Angle Acc:  56.38%  (188 frames)
+  - MicheleMatozza Boost Acc:  98.44%  Angle Acc:  61.51%  (964 frames)
+  - nicko        Boost Acc:  98.28%  Angle Acc:  57.79%  (3426 frames)
+  - Martin       Boost Acc:  97.62%  Angle Acc:  73.02%  (378 frames)
+  - AI_bot       Boost Acc:  95.74%  Angle Acc:  27.11%  (18119 frames)
+
+📁 Output: training_20251103_000110
+--------------------------------------------------------------------------------
+
+================================================================================
+Training: 20251103_010844 (2025-11-03 01:16:47)
+================================================================================
+
+ESN Configuration:
+  - Reservoir size: 4000
+  - Spectral radius: 1.05
+  - Input scale: 1.0
+  - Leak rate: [0.1, 0.3]
+  - Sparsity: 0.9
+
+Training Configuration:
+  - Alpha (regularization): 0.01
+  - Washout: 50 frames
+  - Prediction horizon: 0 frames
+  - Test split: 20%
+  - Random seed: 42
+  - Total frames: 477914
+
+🎯 Key Results:
+  Angle Accuracy (test):  32.76%
+  Top-3 Accuracy (test):  52.74%
+  Angular Error (test):   19.94°
+  Boost Accuracy (test):  97.20%
+  Error Ratio (test/train): 1.046
+
+👥 Per-User Performance:
+  - Matteo_Giardina_BAINSA Boost Acc:  99.44%  Angle Acc:  72.18%  (708 frames)
+  - Martin       Boost Acc:  98.68%  Angle Acc:  60.43%  (1749 frames)
+  - nicko        Boost Acc:  98.30%  Angle Acc:  62.32%  (5881 frames)
+  - MicheleMatozza Boost Acc:  98.26%  Angle Acc:  70.22%  (1894 frames)
+  - anonymous    Boost Acc:  97.37%  Angle Acc:  56.58%  (228 frames)
+  - AI_bot       Boost Acc:  95.69%  Angle Acc:  28.52%  (78006 frames)
+  - nickmartin   Boost Acc:  83.42%  Angle Acc:  50.75%  (199 frames)
+
+📁 Output: training_20251103_010844
+--------------------------------------------------------------------------------

@@ -14,6 +14,51 @@ sys.path.append(str(Path(__file__).parent.parent))
 from configuration import *
 
 
+def compute_angle_classification_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    """
+    Compute metrics for angle classification (multimodal approach).
+    
+    Args:
+        y_true: True outputs [n_samples, NUM_ANGLE_BINS + 1] (one-hot angle + boost)
+        y_pred: Predicted outputs [n_samples, NUM_ANGLE_BINS + 1] (probabilities)
+        
+    Returns:
+        Dictionary with classification metrics
+    """
+    # Separate angle predictions and boost
+    y_true_angle = y_true[:, :NUM_ANGLE_BINS]  # One-hot
+    y_pred_angle = y_pred[:, :NUM_ANGLE_BINS]  # Probabilities
+    
+    # Get predicted class (argmax)
+    true_bins = np.argmax(y_true_angle, axis=1)
+    pred_bins = np.argmax(y_pred_angle, axis=1)
+    
+    # Classification accuracy
+    accuracy = np.mean(true_bins == pred_bins)
+    
+    # Top-3 accuracy (is true class in top 3 predictions?)
+    top3_preds = np.argsort(y_pred_angle, axis=1)[:, -3:]
+    top3_accuracy = np.mean([true_bins[i] in top3_preds[i] for i in range(len(true_bins))])
+    
+    # Angular error in degrees
+    true_angles = (true_bins * ANGLE_RESOLUTION + ANGLE_MIN)
+    pred_angles = (pred_bins * ANGLE_RESOLUTION + ANGLE_MIN)
+    angular_errors = np.abs(true_angles - pred_angles)
+    mean_angular_error = np.mean(angular_errors)
+    
+    # Cross-entropy loss
+    epsilon = 1e-10
+    y_pred_angle_clipped = np.clip(y_pred_angle, epsilon, 1.0 - epsilon)
+    cross_entropy = -np.mean(np.sum(y_true_angle * np.log(y_pred_angle_clipped), axis=1))
+    
+    return {
+        'accuracy': accuracy,
+        'top3_accuracy': top3_accuracy,
+        'angular_error_deg': mean_angular_error,
+        'cross_entropy': cross_entropy
+    }
+
+
 def compute_direction_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
     """
     Compute metrics for direction prediction (mx, my).
@@ -137,25 +182,28 @@ def compute_boost_metrics(y_true: np.ndarray, y_pred: np.ndarray,
 
 def compute_all_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
     """
-    Compute all evaluation metrics.
+    Compute all evaluation metrics for ANGLE CLASSIFICATION model.
     
     Args:
-        y_true: True outputs [n_samples, 3] (mx, my, boost)
-        y_pred: Predicted outputs [n_samples, 3]
+        y_true: True outputs [n_samples, NUM_ANGLE_BINS + 1] (one-hot angle + boost)
+        y_pred: Predicted outputs [n_samples, NUM_ANGLE_BINS + 1] (probabilities)
         
     Returns:
         Dictionary with all metrics
     """
-    direction_metrics = compute_direction_metrics(y_true, y_pred)
-    boost_metrics = compute_boost_metrics(y_true, y_pred)
+    # Angle classification metrics
+    angle_metrics = compute_angle_classification_metrics(y_true, y_pred)
     
-    # Overall MSE
-    overall_mse = np.mean((y_true - y_pred) ** 2)
+    # Boost metrics (last column)
+    y_true_boost_extended = np.zeros((len(y_true), 3))
+    y_pred_boost_extended = np.zeros((len(y_pred), 3))
+    y_true_boost_extended[:, 2] = y_true[:, -1]  # Boost in last column
+    y_pred_boost_extended[:, 2] = y_pred[:, -1]
+    boost_metrics = compute_boost_metrics(y_true_boost_extended, y_pred_boost_extended)
     
     # Combine all metrics
     metrics = {
-        'overall_mse': overall_mse,
-        **direction_metrics,
+        **angle_metrics,
         **boost_metrics
     }
     
@@ -164,7 +212,7 @@ def compute_all_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, flo
 
 def print_metrics(metrics: Dict[str, float], dataset_name: str = "Dataset"):
     """
-    Print metrics in a readable format.
+    Print metrics in a readable format for ANGLE CLASSIFICATION model.
     
     Args:
         metrics: Dictionary of metrics
@@ -174,14 +222,11 @@ def print_metrics(metrics: Dict[str, float], dataset_name: str = "Dataset"):
     print(f"{dataset_name.upper()} SET METRICS")
     print("=" * 60)
     
-    print(f"\n📊 Overall:")
-    print(f"  MSE (all outputs): {metrics['overall_mse']:.6f}")
-    
-    print(f"\n🎯 Direction Prediction (mx, my):")
-    print(f"  MSE:  mx={metrics['mse_mx']:.6f}, my={metrics['mse_my']:.6f}, avg={metrics['mse_direction']:.6f}")
-    print(f"  RMSE: mx={metrics['rmse_mx']:.4f}, my={metrics['rmse_my']:.4f}, avg={metrics['rmse_direction']:.4f}")
-    print(f"  MAE:  mx={metrics['mae_mx']:.4f}, my={metrics['mae_my']:.4f}, avg={metrics['mae_direction']:.4f}")
-    print(f"  Angular Error: {metrics['angular_error_deg']:.2f}° ({metrics['angular_error_rad']:.4f} rad)")
+    print(f"\n🎯 Angle Classification ({NUM_ANGLE_BINS} bins: {ANGLE_MIN}° to {ANGLE_MAX}°):")
+    print(f"  Accuracy (exact bin): {metrics['accuracy']:.4f} ({metrics['accuracy']*100:.2f}%)")
+    print(f"  Top-3 Accuracy:       {metrics['top3_accuracy']:.4f} ({metrics['top3_accuracy']*100:.2f}%)")
+    print(f"  Angular Error:        {metrics['angular_error_deg']:.2f}°")
+    print(f"  Cross-Entropy Loss:   {metrics['cross_entropy']:.4f}")
     
     print(f"\n⚡ Boost Prediction (binary):")
     print(f"  Accuracy:  {metrics['boost_accuracy']:.4f} ({metrics['boost_accuracy']*100:.2f}%)")
@@ -216,18 +261,18 @@ def compare_metrics(train_metrics: Dict[str, float],
                         format_str: str = "{:.6f}"):
         train_str = format_str.format(train_val)
         test_str = format_str.format(test_val)
-        print(f"  {name:30s}  Train: {train_str:12s}  Test: {test_str:12s}")
+        ratio = test_val / train_val if train_val != 0 else 0
+        print(f"  {name:30s}  Train: {train_str:12s}  Test: {test_str:12s}  Ratio: {ratio:.2f}")
     
-    print(f"\n📊 Overall MSE:")
-    print_comparison("MSE", train_metrics['overall_mse'], test_metrics['overall_mse'])
-    
-    print(f"\n🎯 Direction Metrics:")
-    print_comparison("RMSE (direction)", train_metrics['rmse_direction'], 
-                    test_metrics['rmse_direction'], "{:.4f}")
-    print_comparison("MAE (direction)", train_metrics['mae_direction'], 
-                    test_metrics['mae_direction'], "{:.4f}")
+    print(f"\n🎯 Angle Classification Metrics:")
+    print_comparison("Accuracy (exact bin)", train_metrics['accuracy'], 
+                    test_metrics['accuracy'], "{:.4f}")
+    print_comparison("Top-3 Accuracy", train_metrics['top3_accuracy'], 
+                    test_metrics['top3_accuracy'], "{:.4f}")
     print_comparison("Angular Error (deg)", train_metrics['angular_error_deg'], 
                     test_metrics['angular_error_deg'], "{:.2f}")
+    print_comparison("Cross-Entropy Loss", train_metrics['cross_entropy'], 
+                    test_metrics['cross_entropy'], "{:.4f}")
     
     print(f"\n⚡ Boost Metrics:")
     print_comparison("Accuracy", train_metrics['boost_accuracy'], 
@@ -237,13 +282,13 @@ def compare_metrics(train_metrics: Dict[str, float],
     
     # Check for overfitting
     print(f"\n🔍 Overfitting Analysis:")
-    mse_ratio = test_metrics['overall_mse'] / train_metrics['overall_mse']
-    acc_diff = train_metrics['boost_accuracy'] - test_metrics['boost_accuracy']
+    angle_error_ratio = test_metrics['angular_error_deg'] / train_metrics['angular_error_deg']
+    acc_diff = train_metrics['accuracy'] - test_metrics['accuracy']
     
-    print(f"  Test/Train MSE ratio: {mse_ratio:.3f}", end="")
-    if mse_ratio < 1.2:
+    print(f"  Test/Train Angular Error ratio: {angle_error_ratio:.3f}", end="")
+    if angle_error_ratio < 1.2:
         print(" ✓ (good generalization)")
-    elif mse_ratio < 1.5:
+    elif angle_error_ratio < 1.5:
         print(" ~ (acceptable)")
     else:
         print(" ⚠ (possible overfitting)")

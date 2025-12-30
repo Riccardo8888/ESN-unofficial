@@ -27,8 +27,14 @@ RADIAL_BINS = 24       # Radial resolution of polar grid
 CHANNELS = 4           # Food, Enemy Body, My Body, Enemy Heads
 INPUT_DIM = ANGULAR_BINS * RADIAL_BINS * CHANNELS  # 6144 inputs per frame
 
-# Output dimensions (player actions)
-OUTPUT_DIM = 3         # mx (direction x), my (direction y), boost (0/1)
+# Output dimensions (player actions) - MULTIMODAL CLASSIFICATION
+# Angle classification: -40° to +40° with 5° resolution = 17 bins
+# Example: -40°, -35°, -30°, ..., 0°, ..., +30°, +35°, +40°
+ANGLE_MIN = -40        # Minimum angle (degrees)
+ANGLE_MAX = 40         # Maximum angle (degrees)
+ANGLE_RESOLUTION = 5   # Degrees per bin
+NUM_ANGLE_BINS = int((ANGLE_MAX - ANGLE_MIN) / ANGLE_RESOLUTION) + 1  # 29 bins
+OUTPUT_DIM = NUM_ANGLE_BINS + 1  # 29 angle bins + 1 boost probability
 
 # ===========================================
 # PREDICTION PARAMETERS
@@ -52,10 +58,10 @@ RANDOM_SEED = 42
 # ECHO STATE NETWORK PARAMETERS
 # ===========================================
 # Reservoir size
-N_RESERVOIR = 1500     # Number of neurons in the reservoir (reduced from 2000)
+N_RESERVOIR = 4000     # Number of neurons in the reservoir (reduced from 2000)
 
 # Spectral radius (controls dynamics)
-SPECTRAL_RADIUS = 1.0
+SPECTRAL_RADIUS = 1.05
 
 # Input scaling
 INPUT_SCALE = 1.0
@@ -86,6 +92,13 @@ BOOST_THRESHOLD = 0.5
 PROGRESS_INTERVAL = 1000
 
 # ===========================================
+# INFERENCE PARAMETERS
+# ===========================================
+# Probability sharpening for more deterministic predictions
+SHARPENING_EXPONENT = 8.0  # Apply probs^N to emphasize peaks (higher = more deterministic)
+                           # 1.0 = no sharpening, 2.0 = square, 4.0 = strong (recommended)
+
+# ===========================================
 # ADDITIONAL METADATA
 # ===========================================
 # Include additional features beyond grid data
@@ -94,6 +107,7 @@ USE_HEADING = False     # Include snake heading as input
 USE_DISTANCE_TO_BORDER = True  # Include distance to border as input
 USE_ANGULAR_VELOCITY = True  # Include rate of heading change (d_heading/dt)
 USE_DISTANCE_VELOCITY = True  # Include rate of distance change (d_distance/dt)
+USE_PREVIOUS_ANGLE = True  # Include previous angle delta (for temporal coherence)
 
 # Calculate actual input dimension with metadata
 if USE_VELOCITY:
@@ -106,6 +120,8 @@ if USE_ANGULAR_VELOCITY:
     INPUT_DIM += 1  # Rate of heading change
 if USE_DISTANCE_VELOCITY:
     INPUT_DIM += 1  # Rate of border distance change
+if USE_PREVIOUS_ANGLE:
+    INPUT_DIM += 2  # sin and cos of previous angle delta
 
 # ===========================================
 # DISPLAY CONFIGURATION
@@ -125,8 +141,14 @@ def print_config():
         print(f"  - Heading (sin, cos): 2")
     if USE_DISTANCE_TO_BORDER:
         print(f"  - Distance to border: 1")
+    if USE_ANGULAR_VELOCITY:
+        print(f"  - Angular velocity: 1")
+    if USE_DISTANCE_VELOCITY:
+        print(f"  - Distance velocity: 1")
+    if USE_PREVIOUS_ANGLE:
+        print(f"  - Previous angle (sin, cos): 2")
     print(f"  - Total: {INPUT_DIM}")
-    print(f"\nOutput Dimensions: {OUTPUT_DIM} (mx, my, boost)")
+    print(f"\nOutput Dimensions: {OUTPUT_DIM} ({NUM_ANGLE_BINS} angle bins [{ANGLE_MIN}° to {ANGLE_MAX}°, {ANGLE_RESOLUTION}° resolution] + 1 boost)")
     print(f"\nPrediction Horizon: {PREDICTION_HORIZON} frames")
     print(f"\nESN Configuration:")
     print(f"  - Reservoir size: {N_RESERVOIR}")

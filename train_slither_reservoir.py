@@ -28,7 +28,7 @@ from reservoir import Reservoir  # Usa il reservoir esistente!
 from utilities.metrics import (
     compute_all_metrics, 
     print_metrics,
-    compute_direction_metrics,
+    compute_angle_classification_metrics,
     compute_boost_metrics,
     compare_metrics
 )
@@ -60,7 +60,8 @@ def compute_wout(X, Y, T_washout=WASHOUT, alpha=ALPHA):
     P = X_train.T @ Y_train  # State-output cross-correlation
     
     # Solve: W_out = (R + alpha I)^-1 P
-    W_out = np.linalg.inv(R + alpha * np.eye(X_train.shape[1])) @ P
+    # Use solve() instead of inv() for speed (2-3x faster)
+    W_out = np.linalg.solve(R + alpha * np.eye(X_train.shape[1]), P)
     
     return W_out
 
@@ -142,7 +143,7 @@ def main():
     print("=" * 60)
     
     print(f"Running forward pass on training data...")
-    X_train_states = reservoir.forward(X_train_cat, collect_states=True)
+    X_train_states = reservoir.forward(X_train_cat, collect_states=True, show_progress=True)
     print(f"  ✓ Collected states: {X_train_states.shape}")
     
     # ===========================================
@@ -183,7 +184,7 @@ def main():
     print("=" * 60)
     
     print(f"Running forward pass on test data...")
-    X_test_states = reservoir.forward(X_test_cat, collect_states=True)
+    X_test_states = reservoir.forward(X_test_cat, collect_states=True, show_progress=True)
     print(f"  ✓ Collected states: {X_test_states.shape}")
     
     # Make predictions
@@ -222,7 +223,7 @@ def main():
         unique_users[username].append(idx)
     
     print(f"\nAnalyzing performance across {len(unique_users)} users:")
-    print(f"{'User':<15} {'Frames':<10} {'Boost Acc':<12} {'RMSE (dir)':<12} {'Angular Err':<12}")
+    print(f"{'User':<15} {'Frames':<10} {'Boost Acc':<12} {'Angle Acc':<12} {'Angular Err':<12}")
     print("=" * 65)
     
     user_stats = {}
@@ -238,31 +239,31 @@ def main():
         y_user_true = y_test_true[user_mask]
         
         # Compute metrics
-        user_dir = compute_direction_metrics(y_user_true[:, :2], y_user_pred[:, :2])
+        user_angle = compute_angle_classification_metrics(y_user_true, y_user_pred)
         user_boost = compute_boost_metrics(y_user_true, y_user_pred)
         
         user_stats[username] = {
             'n_frames': len(y_user_pred),
             'boost_accuracy': user_boost['boost_accuracy'],
-            'rmse_direction': user_dir['rmse_direction'],
-            'angular_error_deg': user_dir['angular_error_deg']
+            'angle_accuracy': user_angle['accuracy'],
+            'angular_error_deg': user_angle['angular_error_deg']
         }
         
         print(f"{username:<15} {len(y_user_pred):<10} "
               f"{user_boost['boost_accuracy']:>10.2%}  "
-              f"{user_dir['rmse_direction']:>10.4f}  "
-              f"{user_dir['angular_error_deg']:>10.2f}°")
+              f"{user_angle['accuracy']:>10.2%}  "
+              f"{user_angle['angular_error_deg']:>10.2f}°")
     
     # Summary statistics
     if len(user_stats) > 1:
         all_boost_accs = [s['boost_accuracy'] for s in user_stats.values()]
-        all_rmses = [s['rmse_direction'] for s in user_stats.values()]
+        all_angle_accs = [s['angle_accuracy'] for s in user_stats.values()]
         
         print("\n" + "-" * 65)
-        print(f"{'MEAN':<15} {'':<10} {np.mean(all_boost_accs):>10.2%}  {np.mean(all_rmses):>10.4f}")
-        print(f"{'STD':<15} {'':<10} {np.std(all_boost_accs):>10.2%}  {np.std(all_rmses):>10.4f}")
-        print(f"{'MIN':<15} {'':<10} {np.min(all_boost_accs):>10.2%}  {np.min(all_rmses):>10.4f}")
-        print(f"{'MAX':<15} {'':<10} {np.max(all_boost_accs):>10.2%}  {np.max(all_rmses):>10.4f}")
+        print(f"{'MEAN':<15} {'':<10} {np.mean(all_boost_accs):>10.2%}  {np.mean(all_angle_accs):>10.2%}")
+        print(f"{'STD':<15} {'':<10} {np.std(all_boost_accs):>10.2%}  {np.std(all_angle_accs):>10.2%}")
+        print(f"{'MIN':<15} {'':<10} {np.min(all_boost_accs):>10.2%}  {np.min(all_angle_accs):>10.2%}")
+        print(f"{'MAX':<15} {'':<10} {np.max(all_boost_accs):>10.2%}  {np.max(all_angle_accs):>10.2%}")
         
         # Identify best and worst performers
         best_user = max(user_stats, key=lambda u: user_stats[u]['boost_accuracy'])
@@ -365,10 +366,10 @@ def main():
     print("=" * 60)
     
     print(f"\n🎯 Key Results:")
-    print(f"  Direction RMSE (test):  {test_metrics['rmse_direction']:.4f}")
+    print(f"  Angle Accuracy (test):  {test_metrics['accuracy']*100:.2f}%")
+    print(f"  Top-3 Accuracy (test):  {test_metrics['top3_accuracy']*100:.2f}%")
     print(f"  Angular Error (test):   {test_metrics['angular_error_deg']:.2f}°")
     print(f"  Boost Accuracy (test):  {test_metrics['boost_accuracy']*100:.2f}%")
-    print(f"  Overall MSE (test):     {test_metrics['overall_mse']:.6f}")
     
     print(f"\n📁 Output Directory: {output_dir}")
     
@@ -411,18 +412,18 @@ def main():
         f.write(f"  - Total frames: {X_train_cat.shape[0] + X_test_cat.shape[0]}\n\n")
         
         f.write("🎯 Key Results:\n")
-        f.write(f"  Direction RMSE (test):  {test_metrics['rmse_direction']:.4f}\n")
+        f.write(f"  Angle Accuracy (test):  {test_metrics['accuracy']*100:.2f}%\n")
+        f.write(f"  Top-3 Accuracy (test):  {test_metrics['top3_accuracy']*100:.2f}%\n")
         f.write(f"  Angular Error (test):   {test_metrics['angular_error_deg']:.2f}°\n")
         f.write(f"  Boost Accuracy (test):  {test_metrics['boost_accuracy']*100:.2f}%\n")
-        f.write(f"  Overall MSE (test):     {test_metrics['overall_mse']:.6f}\n")
-        f.write(f"  MSE Ratio (test/train): {test_metrics['overall_mse']/train_metrics['overall_mse']:.3f}\n\n")
+        f.write(f"  Error Ratio (test/train): {test_metrics['angular_error_deg']/train_metrics['angular_error_deg']:.3f}\n\n")
         
         # Per-user stats if available
         if len(user_stats) > 0:
             f.write("👥 Per-User Performance:\n")
             for username, stats in sorted(user_stats.items(), key=lambda x: x[1]['boost_accuracy'], reverse=True):
                 f.write(f"  - {username:<12} Boost Acc: {stats['boost_accuracy']*100:>6.2f}%  "
-                       f"RMSE: {stats['rmse_direction']:.4f}  ({stats['n_frames']} frames)\n")
+                       f"Angle Acc: {stats['angle_accuracy']*100:>6.2f}%  ({stats['n_frames']} frames)\n")
             f.write("\n")
         
         f.write(f"📁 Output: {output_dir.name}\n")

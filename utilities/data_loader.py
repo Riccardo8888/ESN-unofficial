@@ -19,13 +19,17 @@ from configuration import *
 
 def discover_sessions(data_path: Path) -> List[Path]:
     """
-    Discover all available session directories in the data path.
+    Discover all available session/game directories in the data path.
+    
+    Supports two structures:
+    1. OLD: data/user/session_* (mixed games in one session)
+    2. NEW: data/AI_bot/game_* (one game per directory)
     
     Args:
         data_path: Path to the data directory
         
     Returns:
-        List of paths to valid session directories
+        List of paths to valid session/game directories
     """
     sessions = []
     
@@ -33,12 +37,15 @@ def discover_sessions(data_path: Path) -> List[Path]:
     if data_path.exists():
         for user_dir in data_path.iterdir():
             if user_dir.is_dir():
-                # Look for session directories within user dir
+                # Look for session directories within user dir (OLD structure)
                 for session_dir in user_dir.iterdir():
-                    if session_dir.is_dir() and session_dir.name.startswith('session_'):
-                        # Check if it contains Zarr data
-                        if (session_dir / 'grids').exists():
-                            sessions.append(session_dir)
+                    if session_dir.is_dir():
+                        # Check both session_* (old) and game_* (new) patterns
+                        if (session_dir.name.startswith('session_') or 
+                            session_dir.name.startswith('game_')):
+                            # Check if it contains Zarr data
+                            if (session_dir / 'grids').exists():
+                                sessions.append(session_dir)
     
     return sorted(sessions)
 
@@ -181,10 +188,86 @@ def prepare_features(session_data: Dict[str, np.ndarray]) -> np.ndarray:
         distance_vel = np.clip(distance_vel, -1.0, 1.0)
         features.append(distance_vel.reshape(-1, 1))
     
+    # Add previous angle delta if enabled (for temporal coherence)
+    if USE_PREVIOUS_ANGLE:
+        # Calculate angle from player_inputs (mx, my)
+        mx = session_data['player_inputs'][:, 0]
+        my = session_data['player_inputs'][:, 1]
+        angle_delta = np.arctan2(my, mx)
+        
+        # Shift by 1 frame to get "previous" angle
+        prev_angle_delta = np.roll(angle_delta, shift=1)
+        prev_angle_delta[0] = 0.0  # First frame has no previous angle
+        
+        # Encode as sin/cos to avoid discontinuity at -π/π
+        prev_angle_sin = np.sin(prev_angle_delta)
+        prev_angle_cos = np.cos(prev_angle_delta)
+        features.extend([prev_angle_sin.reshape(-1, 1), prev_angle_cos.reshape(-1, 1)])
+    
     # Concatenate all features
     X = np.concatenate(features, axis=1)
     
     return X
+
+
+def convert_to_angle_bins(player_inputs: np.ndarray) -> np.ndarray:
+    """
+    Convert (mx, my, boost) to (angle_bin_one_hot, boost) format.
+    
+    Args:
+        player_inputs: Array [frames, 3] with (mx, my, boost)
+        
+    Returns:
+        Array [frames, NUM_ANGLE_BINS + 1] with one-hot angle + boost
+    """
+    mx = player_inputs[:, 0]
+    my = player_inputs[:, 1]
+    boost = player_inputs[:, 2]
+    
+    # Calculate angle from (mx, my)
+    angles_rad = np.arctan2(my, mx)
+    angles_deg = np.degrees(angles_rad)
+    
+    # Clip to [-90, +90] range
+    angles_deg = np.clip(angles_deg, ANGLE_MIN, ANGLE_MAX)
+    
+    # Convert to continuous bin position (not rounded)
+    # Example: 2.5° → bin_pos = 18.5 (between bin 18 and 19)
+    bin_positions = (angles_deg - ANGLE_MIN) / ANGLE_RESOLUTION
+    bin_positions = np.clip(bin_positions, 0, NUM_ANGLE_BINS - 1)
+    
+    # SOFT LABEL ENCODING: Split probability between adjacent bins
+    # Instead of hard one-hot, distribute weight between neighbors
+    n_frames = len(player_inputs)
+    y_angle_soft = np.zeros((n_frames, NUM_ANGLE_BINS), dtype=np.float32)
+    
+    for i in range(n_frames):
+        pos = bin_positions[i]
+        
+        # Get lower and upper bin indices
+        lower_bin = int(np.floor(pos))
+        upper_bin = int(np.ceil(pos))
+        
+        # Ensure bounds
+        lower_bin = np.clip(lower_bin, 0, NUM_ANGLE_BINS - 1)
+        upper_bin = np.clip(upper_bin, 0, NUM_ANGLE_BINS - 1)
+        
+        if lower_bin == upper_bin:
+            # Exact bin center (e.g., 0.0°, 5.0°, 10.0°)
+            y_angle_soft[i, lower_bin] = 1.0
+        else:
+            # Between two bins - linear interpolation
+            # Example: pos=18.3 → 70% to bin 18, 30% to bin 19
+            weight_upper = pos - lower_bin  # Distance from lower bin
+            weight_lower = 1.0 - weight_upper
+            
+            y_angle_soft[i, lower_bin] = weight_lower
+            y_angle_soft[i, upper_bin] = weight_upper
+    
+    # Concatenate with boost
+    y_new = np.concatenate([y_angle_soft, boost.reshape(-1, 1)], axis=1)
+    
+    return y_new
 
 
 def create_sequences_with_horizon(X: np.ndarray, y: np.ndarray, 
@@ -247,17 +330,24 @@ def load_all_data(data_path: Path,
     usernames = []
     
     for i, session_path in enumerate(session_paths):
-        if verbose:
-            print(f"\nLoading session {i+1}/{len(session_paths)}: {session_path.name}")
+        # Determine if this is a session or game
+        is_game = session_path.name.startswith('game_')
+        item_type = "game" if is_game else "session"
         
-        # Load session
+        if verbose:
+            print(f"\nLoading {item_type} {i+1}/{len(session_paths)}: {session_path.name}")
+        
+        # Load session/game
         session_data = load_session(session_path)
         if session_data is None:
             continue
         
         # Prepare features
         X = prepare_features(session_data)
-        y = session_data['player_inputs']  # [frames, 3] (mx, my, boost)
+        y_raw = session_data['player_inputs']  # [frames, 3] (mx, my, boost)
+        
+        # Convert to angle bins (one-hot encoding)
+        y = convert_to_angle_bins(y_raw)  # [frames, NUM_ANGLE_BINS + 1]
         
         # Create sequences with prediction horizon
         X_seq, y_seq = create_sequences_with_horizon(X, y, horizon=PREDICTION_HORIZON)
@@ -269,6 +359,10 @@ def load_all_data(data_path: Path,
         
         username = session_data['metadata'].get('username', 'unknown')
         
+        # For AI_bot games, extract username from parent directory if not in metadata
+        if username == 'unknown' and is_game:
+            username = session_path.parent.name  # AI_bot
+        
         X_list.append(X_seq)
         y_list.append(y_seq)
         session_names.append(session_path.name)
@@ -278,7 +372,7 @@ def load_all_data(data_path: Path,
             print(f"  ✓ Loaded: {X_seq.shape[0]} frames, user: {username}")
     
     if verbose:
-        print(f"\n✓ Successfully loaded {len(X_list)} session(s)")
+        print(f"\n✓ Successfully loaded {len(X_list)} session(s)/game(s)")
         total_frames = sum(X.shape[0] for X in X_list)
         print(f"  Total frames: {total_frames}")
     

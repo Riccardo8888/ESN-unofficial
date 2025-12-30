@@ -17,6 +17,7 @@ import asyncio
 import websockets
 import json
 import numpy as np
+import random
 import time
 from pathlib import Path
 from datetime import datetime
@@ -51,8 +52,17 @@ class ESNControlServer:
         # History for temporal derivatives (previous frame values)
         self.previous_frame = {
             'heading': None,
-            'distanceToBorder': None
+            'distanceToBorder': None,
+            'angle_delta': None
         }
+        
+        # Temporal smoothing: track previous angle distribution
+        self.previous_angle_probs = None  # For 50/50 smoothing with current frame
+        
+        # Latest predictions (for visualization)
+        self.latest_angle_probs = None
+        self.latest_boost_prob = None
+        self.latest_command = None
         
         # Load model
         print("\n" + "=" * 60)
@@ -179,6 +189,22 @@ class ESNControlServer:
             # Update previous distance
             self.previous_frame['distanceToBorder'] = current_distance
         
+        # Add previous angle delta if model expects it (for temporal coherence)
+        if USE_PREVIOUS_ANGLE:
+            if self.previous_frame['angle_delta'] is not None:
+                # Use previous angle delta (sin, cos)
+                prev_angle_sin = np.sin(self.previous_frame['angle_delta'])
+                prev_angle_cos = np.cos(self.previous_frame['angle_delta'])
+            else:
+                # First frame: no previous angle
+                prev_angle_sin = 0.0
+                prev_angle_cos = 1.0  # cos(0) = 1
+            
+            features_list.append([prev_angle_sin])
+            features_list.append([prev_angle_cos])
+            
+            # Note: angle_delta will be updated AFTER prediction in compute_control_command
+        
         # NOTE: snake_length is NOT included in the current model
         # This matches the data_loader.py logic which doesn't add snake_length
         
@@ -206,23 +232,45 @@ class ESNControlServer:
         # Update reservoir state using the update method
         self.reservoir_state = self.reservoir.update(features, self.reservoir_state)
         
-        # Compute output
-        prediction = self.reservoir_state @ self.W_out  # [3]
+        # Compute output - ANGLE CLASSIFICATION format
+        # Output: [NUM_ANGLE_BINS] angle logits + [1] boost logit
+        prediction = self.reservoir_state @ self.W_out  # [NUM_ANGLE_BINS + 1]
         
-        mx_pred = float(prediction[0])
-        my_pred = float(prediction[1])
-        boost_prob = float(prediction[2])
+        angle_logits = prediction[:NUM_ANGLE_BINS]  # First 29 values
+        boost_logit = float(prediction[NUM_ANGLE_BINS])  # Last value (raw logit)
         
-        return mx_pred, my_pred, boost_prob
+        # Apply softmax to get angle probabilities
+        angle_probs = self._softmax(angle_logits)
+        
+        # Apply sigmoid to get boost probability [0, 1]
+        boost_prob = 1.0 / (1.0 + np.exp(-boost_logit))
+        
+        # SHARPEN probabilities with power function to emphasize higher values
+        # This makes the distribution more peaked around the most likely angles
+        # Higher exponent = more peaked distribution (more deterministic)
+        # Configured in configuration.py: SHARPENING_EXPONENT
+        
+        angle_probs_sharpened = angle_probs ** SHARPENING_EXPONENT
+        # Re-normalize after sharpening
+        angle_probs_sharpened = angle_probs_sharpened / np.sum(angle_probs_sharpened)
+        
+        # TEMPORAL SMOOTHING: DISABLED (was causing issues)
+        # Direct use of sharpened probabilities without averaging with previous frame
+        
+        return angle_probs_sharpened, boost_prob
     
-    def compute_control_command(self, frame_data: dict, mx_pred: float, my_pred: float, boost_prob: float) -> dict:
+    def _softmax(self, x: np.ndarray) -> np.ndarray:
+        """Compute softmax probabilities from logits."""
+        exp_x = np.exp(x - np.max(x))  # Subtract max for numerical stability
+        return exp_x / np.sum(exp_x)
+    
+    def compute_control_command(self, frame_data: dict, angle_probs: np.ndarray, boost_prob: float) -> dict:
         """
-        Calcola il comando di controllo dal prediction ESN.
+        Calcola il comando di controllo dal prediction ESN usando SAMPLING.
         
         Args:
             frame_data: Frame originale (per current heading)
-            mx_pred: Predicted mouse X (normalized direction)
-            my_pred: Predicted mouse Y (normalized direction)
+            angle_probs: Probability distribution over angle bins [NUM_ANGLE_BINS]
             boost_prob: Boost probability [0, 1]
             
         Returns:
@@ -231,56 +279,41 @@ class ESNControlServer:
         # Current heading (solo per logging, non serve per il calcolo!)
         current_heading = frame_data['metadata']['heading']
         
-        # IMPORTANTE: (mx, my) sono già coordinate RELATIVE al canvas del giocatore
-        # che ruota insieme al serpente. Quindi l'angolo calcolato da arctan2(my, mx)
-        # È GIÀ il delta angolare relativo, non serve sottrarre current_heading!
-        angle_delta = np.arctan2(my_pred, mx_pred)
+        # SAMPLE angle from probability distribution (NO smoothing)
+        # Sample bin index according to probabilities
+        sampled_bin = np.random.choice(NUM_ANGLE_BINS, p=angle_probs)
         
-        # Calculate confidence from magnitude of (mx, my) vector
-        # Low magnitude = low confidence = reduce angle change
-        confidence = np.sqrt(mx_pred**2 + my_pred**2)
+        # Convert bin to angle in degrees
+        angle_deg = sampled_bin * ANGLE_RESOLUTION + ANGLE_MIN  # e.g., bin 18 → 0°
         
-        # Confidence scaling: 
-        # confidence < 0.3 → scale down aggressively (min 0.1x)
-        # confidence > 0.8 → full angle change (1.0x)
-        MIN_CONFIDENCE = 0.3  # Below this, scale to minimum
-        MAX_CONFIDENCE = 1.2  # Above this, no scaling
-        MIN_SCALE = 0.1       # Minimum scaling factor
+        # Convert to radians (use bin center directly, no Gaussian noise)
+        angle_delta = np.radians(angle_deg)
         
-        if confidence < MIN_CONFIDENCE:
-            confidence_scale = MIN_SCALE
-        elif confidence > MAX_CONFIDENCE:
-            confidence_scale = 1.0
-        else:
-            # Linear interpolation between MIN_SCALE and 1.0
-            confidence_scale = MIN_SCALE + (1.0 - MIN_SCALE) * \
-                             (confidence - MIN_CONFIDENCE) / (MAX_CONFIDENCE - MIN_CONFIDENCE)
+        # Calculate confidence from distribution entropy
+        # High entropy (uniform) = low confidence
+        # Low entropy (peaked) = high confidence
+        entropy = -np.sum(angle_probs * np.log(angle_probs + 1e-10))
+        max_entropy = np.log(NUM_ANGLE_BINS)  # Maximum possible entropy
+        confidence = 1.0 - (entropy / max_entropy)  # Normalize to [0, 1]
         
-        # Normalize to [-π, π]
-        angle_delta = np.arctan2(np.sin(angle_delta), np.cos(angle_delta))
+        # Confidence scale for logging (no scaling applied now since we sample)
+        confidence_scale = 1.0
         
-        # Apply confidence scaling BEFORE clamping
-        angle_delta_scaled = angle_delta * confidence_scale
-
-        # CLAMP angle delta to prevent extreme turns (max ±180° per frame)
-        MAX_ANGLE_DELTA = np.radians(180)  # ±180° max
-        if abs(angle_delta_scaled) > MAX_ANGLE_DELTA:
-            angle_delta_scaled = np.sign(angle_delta_scaled) * MAX_ANGLE_DELTA
-            # Log when clamping happens (less frequent now with confidence scaling)
-            if self.stats['frames_processed'] % 50 == 0:
-                print(f"⚠️  Clamped large angleDelta from {np.degrees(angle_delta):.1f}° to {np.degrees(angle_delta_scaled):.1f}°")
+        # Boost decision - DETERMINISTIC with threshold
+        # Since model was trained with raw outputs (not sigmoid during training),
+        # we need a higher threshold after applying sigmoid in inference
+        # Threshold tuned empirically: 0.6 works well (was 0.20 on raw logits)
+        boost_decision = (boost_prob > 0.50)
         
-        angle_delta = angle_delta_scaled
-        
-        # Boost decision (LOWERED threshold to 0.45 due to model bias)
-        boost_decision = (boost_prob > 0.45)
-        
-        # Boost confidence (distance from threshold)
-        boost_confidence = boost_prob if boost_decision else (1.0 - boost_prob)
+        # Boost confidence (distance from 0.5 threshold)
+        boost_confidence = boost_prob  # Maps [0,1] to [0,1] with peak at extremes
         
         # Calculate predicted angle for logging (angle_delta + current_heading)
         predicted_angle_abs = current_heading + angle_delta
         predicted_angle_abs = np.arctan2(np.sin(predicted_angle_abs), np.cos(predicted_angle_abs))
+        
+        # Update previous angle delta for next frame (temporal coherence)
+        self.previous_frame['angle_delta'] = angle_delta
         
         return {
             'angleDelta': float(angle_delta),
@@ -315,11 +348,16 @@ class ESNControlServer:
         # Prepare features
         features = self.prepare_features(frame_data)
         
-        # ESN inference
-        mx_pred, my_pred, boost_prob = self.predict(features)
+        # ESN inference - returns angle probabilities and boost prob
+        angle_probs, boost_prob = self.predict(features)
         
-        # Compute control command
-        command = self.compute_control_command(frame_data, mx_pred, my_pred, boost_prob)
+        # Save for visualization
+        self.latest_angle_probs = angle_probs
+        self.latest_boost_prob = boost_prob
+        
+        # Compute control command using SAMPLING from distribution
+        command = self.compute_control_command(frame_data, angle_probs, boost_prob)
+        self.latest_command = command
         
         # Processing time
         processing_time = time.time() - start_time
@@ -354,11 +392,19 @@ class ESNControlServer:
         # Color coding based on direction confidence
         conf_emoji = "🟢" if dir_conf > 0.8 else "🟡" if dir_conf > 0.5 else "🟠" if dir_conf > 0.3 else "🔴"
         
-        print(f"📤 Predicted: {predicted_angle_deg:+7.2f}° | "
-              f"Delta: {angle_delta_deg:+7.2f}° ({conf_scale:.2f}x) | "
-              f"BOOST {boost_str} | "
-              f"{conf_emoji} DirConf: {dir_conf:.3f} | "
-              f"mx: {mx_pred:+.3f}, my: {my_pred:+.3f}")
+        # Boost probability display (show actual probability used for random decision)
+        boost_emoji = "⚡" if command['boost'] else "  "
+        
+        # Find top 3 angle bins for display
+        top3_bins = np.argsort(angle_probs)[-3:][::-1]
+        top3_angles = [bin_idx * ANGLE_RESOLUTION + ANGLE_MIN for bin_idx in top3_bins]
+        top3_probs = [angle_probs[bin_idx] for bin_idx in top3_bins]
+        top3_str = ", ".join([f"{angle:+.0f}°({prob:.2f})" for angle, prob in zip(top3_angles, top3_probs)])
+        
+        print(f"📤 Sampled: {angle_delta_deg:+7.2f}° | "
+              f"Top3: [{top3_str}] | "
+              f"{boost_emoji}BOOST {boost_str} (p={boost_prob:.2f}) | "
+              f"{conf_emoji} Conf: {dir_conf:.3f}")
         
         # Log statistics every 50 frames
         if self.stats['frames_processed'] % 50 == 0:
@@ -392,6 +438,9 @@ class ESNControlServer:
         self.stats['total_inference_time'] = 0.0
         self.stats['start_time'] = time.time()
         self.stats['session_id'] = str(int(time.time() * 1000))
+        
+        # Reset temporal smoothing for new session
+        self.previous_angle_probs = None
         
         # Send ready message
         ready_msg = {
