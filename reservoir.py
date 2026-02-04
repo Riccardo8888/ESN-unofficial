@@ -1,7 +1,9 @@
 import numpy as np
 
+from reservoirs.ErdosRenyi import ErdosRenyiReservoir
 
-class Reservoir:
+# It seems like a lot of this file is broken, idk why. Use the reservoirs in the reservoirs package instead.
+class Reservoir(ErdosRenyiReservoir):
     def __init__(self, n_inputs, n_neurons, rhow=1.25, inp_scaling=1., leak_range=(0.1,0.3),
                  verbose=False):
         self.n_inputs = n_inputs
@@ -118,7 +120,7 @@ class Reservoir2:
 
 
   
-        
+
 class Reservoir3:
     def __init__(self, n_inputs, n_neurons, rhow=1.25, inp_scaling=1., leak_range=(0.1, 0.3),
                  sigma=1.0, verbose=False):
