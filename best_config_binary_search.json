@@ -1,0 +1,22 @@
+{
+  "best_config": {
+    "alpha": 0.0001,
+    "n_reservoir": 250,
+    "washout": 150,
+    "spectral_radius": 0.5,
+    "leak_range": [
+      0.1,
+      0.3
+    ],
+    "seed": 42
+  },
+  "final_metrics": {
+    "val_boost_acc": 0.6036120252296723,
+    "val_rmse": 0.6874775002773139,
+    "mse_ratio": 1.615410257212393,
+    "acc_diff": 0.2032448923625394,
+    "score": 0.5019895790484026
+  },
+  "search_time": 48.99637198448181,
+  "search_depth": 3
+}

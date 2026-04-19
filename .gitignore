@@ -1,3 +1,6 @@
+slither_esn_results/*
+data-back
+data*
+clean_data
 .venv/
 .idea/
-
