@@ -1,5 +1,14 @@
-numpy
-matplotlib
-pandas
+numpy>=2.2,<2.3
+networkx>=3.4,<3.7
+pandas>=2.2,<2.4
+matplotlib>=3.9,<3.11
+zarr>=2.18,<3.2
+websockets>=13,<17
+pygame>=2.5,<2.7
+sympy>=1.13,<1.15
+python-louvain>=0.16,<0.17
+jupyter>=1.0,<2.0
+notebook>=7.2,<8.0
+ipykernel>=6.29,<8.0
 scikit-learn
 tqdm

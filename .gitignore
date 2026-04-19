@@ -4,3 +4,6 @@ data*
 clean_data
 .venv/
 .idea/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store

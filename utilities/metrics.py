@@ -6,12 +6,12 @@ Functions to evaluate ESN performance on predicting player actions.
 """
 
 import numpy as np
-from typing import Dict, Tuple
+from typing import Dict
 
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
-from configuration import *
+from vnicktest.scripts.configuration import *
 
 
 def compute_angle_classification_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:

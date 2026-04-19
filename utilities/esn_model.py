@@ -13,7 +13,7 @@ import pickle
 
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
-from configuration import *
+from vnicktest.scripts.configuration import *
 
 
 class SlitherESN:
