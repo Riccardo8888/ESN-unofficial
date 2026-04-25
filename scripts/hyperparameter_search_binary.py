@@ -5,14 +5,11 @@ Hyperparameter Search con Binary Search Intelligente per ESN
 Invece di testare tutti i parametri in una griglia, usa una binary search
 assumendo che la funzione di performance sia monotona.
 
-Algoritmo:
-1. Testa gli estremi di ogni range
-2. Se uno è migliore, dividi quello spazio a metà
-3. Ripeti per SEARCH_DEPTH iterazioni
-4. Questo riduce drasticamente il numero di test necessari
-
-Esempio: invece di testare 10 valori (10 test), binary search con depth=3
-testa solo: [estremo_sx, estremo_dx, metà, quarto_1, quarto_3] = 5 test
+By default this script searches over the **brain-connectome** reservoir.
+Pass ``--reservoir random`` to fall back to the older random-matrix baseline
+(formerly the only option, which is what produced the numbers logged in
+``reservoir_configs/best_config_*.json`` -- those are baseline numbers, not
+connectome numbers).
 """
 
 import numpy as np
@@ -22,13 +19,53 @@ import argparse
 import json
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.append(str(Path(__file__).parent))
+# Add repo root to path so vnicktest.scripts.configuration etc. resolve.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from vnicktest.scripts.configuration import *
 from utilities.data_loader import load_all_data
 from utilities.metrics import compute_direction_metrics, compute_boost_metrics
-from reservoir import Reservoir
+from reservoir import Reservoir as RandomReservoir
+from reservoirs.brain_connectome_reservoir import ConnectomeReservoir
+
+
+def _find_default_graph_dir() -> Path:
+    """Pick a sensible default GraphML folder if none specified."""
+    repo_root = Path(__file__).resolve().parents[1]
+    data_root = repo_root / "data"
+    for sub in ("folder_path_1015", "folder_path_463", "folder_path_234",
+                "folder_path_129", "folder_path_83"):
+        cand = data_root / sub
+        if cand.is_dir() and any(cand.glob("*.graphml")):
+            return cand
+    raise FileNotFoundError(f"No connectome .graphml folder found under {data_root}")
+
+
+def _build_reservoir(reservoir_type: str, graph_dir, n_inputs, n_neurons,
+                     spectral_radius, leak_range, seed):
+    """Construct a reservoir of the requested type with a uniform interface."""
+    if reservoir_type == "connectome":
+        return ConnectomeReservoir(
+            n_inputs=n_inputs,
+            graph_dir=str(graph_dir),
+            n_neurons=int(n_neurons),
+            spectral_radius=float(spectral_radius),
+            leak_range=tuple(leak_range),
+            edge_attr="weight",
+            combine="mean",
+            symmetric=True,
+            seed=int(seed),
+            input_scale=1.0,
+        )
+    return RandomReservoir(
+        n_inputs=n_inputs,
+        n_neurons=int(n_neurons),
+        rhow=float(spectral_radius),
+        inp_scaling=1.0,
+        leak_range=tuple(leak_range),
+        seed=int(seed),
+        verbose=False,
+    )
 
 
 def compute_wout(X, Y, alpha=1e-3):
@@ -59,40 +96,49 @@ def compute_wout(X, Y, alpha=1e-3):
 def train_and_evaluate(
     X_list, Y_list, n_inputs,
     n_reservoir, spectral_radius, leak_range,
-    alpha, washout, seed, n_folds=3
+    alpha, washout, seed, n_folds=3,
+    reservoir_type="connectome", graph_dir=None,
 ):
     """
-    Train ESN and evaluate con cross-validation.
-    Uguale a hyperparameter_search.py ma senza la ricorsione.
+    Train ESN and evaluate with cross-validation.
+
+    Parameters
+    ----------
+    reservoir_type : {"connectome", "random"}
+        ``connectome`` builds a ConnectomeReservoir from ``graph_dir``;
+        ``random`` uses the Erdős-Rényi-style baseline (``Reservoir`` shim).
+    graph_dir : str or Path or None
+        GraphML directory; required when ``reservoir_type='connectome'``.
     """
     n_sessions = len(X_list)
     fold_size = max(1, n_sessions // n_folds)
-    
+
     fold_metrics = []
-    
+
     for fold in range(n_folds):
         val_start = fold * fold_size
         val_end = (fold + 1) * fold_size if fold < n_folds - 1 else n_sessions
-        
+
         val_indices = list(range(val_start, val_end))
         train_indices = [i for i in range(n_sessions) if i not in val_indices]
-        
+
         if not train_indices or not val_indices:
             continue
-        
+
         X_train = [X_list[i] for i in train_indices]
         Y_train = [Y_list[i] for i in train_indices]
         X_val = [X_list[i] for i in val_indices]
         Y_val = [Y_list[i] for i in val_indices]
-        
-        # Create reservoir
-        reservoir = Reservoir(
+
+        # Create reservoir of the requested type.
+        reservoir = _build_reservoir(
+            reservoir_type=reservoir_type,
+            graph_dir=graph_dir,
             n_inputs=n_inputs,
             n_neurons=n_reservoir,
-            rhow=spectral_radius,
-            inp_scaling=1.0,
+            spectral_radius=spectral_radius,
             leak_range=leak_range,
-            verbose=False
+            seed=seed,
         )
         
         # Collect states from training sessions
@@ -183,38 +229,26 @@ def train_and_evaluate(
 
 
 def binary_search_parameter(
-    param_name, param_range, 
+    param_name, param_range,
     X_list, Y_list, n_inputs,
-    fixed_params, 
+    fixed_params,
     search_depth=3,
-    n_folds=2
+    n_folds=2,
+    reservoir_type="connectome",
+    graph_dir=None,
 ):
-    """
-    Binary search su un singolo parametro.
-    
-    Args:
-        param_name: Nome del parametro ('alpha', 'n_reservoir', etc)
-        param_range: [min, max] range da esplorare
-        fixed_params: Altri parametri fissi
-        search_depth: Quante iterazioni di binary search
-        
-    Returns:
-        best_value, best_score, tested_values
-    """
-    print(f"\n🔍 Binary search su '{param_name}': range {param_range}")
-    
-    # Start con gli estremi
+    """Binary search over a single hyperparameter."""
+    print(f"\nBinary search on '{param_name}': range {param_range}")
+
     left, right = param_range
     tested = {}
-    
-    # Test estremi
+
     for val in [left, right]:
         params = fixed_params.copy()
         params[param_name] = val
-        
         val_str = f"{val:.2e}" if param_name == 'alpha' else str(val)
         print(f"   Testing {param_name}={val_str}...", end=" ")
-        
+
         result = train_and_evaluate(
             X_list, Y_list, n_inputs,
             n_reservoir=params['n_reservoir'],
@@ -223,50 +257,37 @@ def binary_search_parameter(
             alpha=params['alpha'],
             washout=params['washout'],
             seed=params['seed'],
-            n_folds=n_folds
+            n_folds=n_folds,
+            reservoir_type=reservoir_type, graph_dir=graph_dir,
         )
-        
+
         if result:
             tested[val] = result['score']
             print(f"score={result['score']:.4f}")
         else:
             tested[val] = -float('inf')
             print("FAILED")
-    
-    # Iterative binary search
+
     for depth in range(search_depth):
-        # Find best so far
         best_val = max(tested, key=tested.get)
-        best_score = tested[best_val]
-        
-        # Determine search direction
         left_score = tested.get(left, -float('inf'))
         right_score = tested.get(right, -float('inf'))
-        
-        # Se left è meglio, cerca tra left e mid
-        # Se right è meglio, cerca tra mid e right
+
         if left_score > right_score:
-            # Search left half
             new_val = (left + best_val) / 2 if param_name == 'alpha' else int((left + best_val) / 2)
-            search_left, search_right = left, best_val
         else:
-            # Search right half
             new_val = (best_val + right) / 2 if param_name == 'alpha' else int((best_val + right) / 2)
-            search_left, search_right = best_val, right
-        
-        # Skip if already tested or too close
+
         if new_val in tested:
             break
         if param_name != 'alpha' and abs(new_val - best_val) < 10:
             break
-        
-        # Test new value
+
         params = fixed_params.copy()
         params[param_name] = new_val
-        
         val_str = f"{new_val:.2e}" if param_name == 'alpha' else str(new_val)
         print(f"   [Depth {depth+1}] Testing {param_name}={val_str}...", end=" ")
-        
+
         result = train_and_evaluate(
             X_list, Y_list, n_inputs,
             n_reservoir=params['n_reservoir'],
@@ -275,7 +296,8 @@ def binary_search_parameter(
             alpha=params['alpha'],
             washout=params['washout'],
             seed=params['seed'],
-            n_folds=n_folds
+            n_folds=n_folds,
+            reservoir_type=reservoir_type, graph_dir=graph_dir,
         )
         
         if result:
@@ -299,17 +321,27 @@ def main():
     parser = argparse.ArgumentParser(description='Binary Search Hyperparameter Optimization')
     parser.add_argument('--depth', type=int, default=3, help='Binary search depth (default: 3)')
     parser.add_argument('--quick', action='store_true', help='Quick mode: fewer combinations and less data')
+    parser.add_argument('--reservoir', choices=['connectome', 'random'], default='connectome',
+                        help='Reservoir type to optimise (default: connectome).')
+    parser.add_argument('--graph-dir', type=str, default=None,
+                        help='Folder of .graphml connectome files. Defaults to the largest folder_path_* under data/.')
     args = parser.parse_args()
-    
+
     SEARCH_DEPTH = args.depth
-    
+    reservoir_type = args.reservoir
+    graph_dir = Path(args.graph_dir) if args.graph_dir else (
+        _find_default_graph_dir() if reservoir_type == 'connectome' else None
+    )
+
     print("\n" + "="*80)
-    print("🔍 SLITHER.IO ESN - BINARY SEARCH HYPERPARAMETER OPTIMIZATION")
+    print("SLITHER.IO ESN - BINARY SEARCH HYPERPARAMETER OPTIMIZATION")
+    print(f"Reservoir type: {reservoir_type.upper()}"
+          + (f"  (graph_dir={graph_dir})" if graph_dir else ""))
     print("="*80)
-    
+
     # Load data
-    print(f"\n📁 Caricamento dati da: {SLITHER_DATA_PATH}")
-    X_list, y_list, session_names = load_all_data(SLITHER_DATA_PATH, verbose=True)
+    print(f"\nLoading data from: {SLITHER_DATA_PATH}")
+    X_list, y_list, session_names, _usernames = load_all_data(SLITHER_DATA_PATH, verbose=True)
     
     if len(X_list) == 0:
         print("\n❌ No data found!")
@@ -375,7 +407,8 @@ def main():
             X_list, y_list, n_inputs,
             best_params,
             search_depth=SEARCH_DEPTH,
-            n_folds=n_folds
+            n_folds=n_folds,
+            reservoir_type=reservoir_type, graph_dir=graph_dir,
         )
         
         # Update best params
@@ -400,7 +433,7 @@ def main():
             print(f"   {k}: {val_str}")
     
     # Final detailed evaluation
-    print(f"\n📊 Final evaluation con {n_folds}-fold CV...")
+    print(f"\nFinal evaluation with {n_folds}-fold CV...")
     final_result = train_and_evaluate(
         X_list, y_list, n_inputs,
         n_reservoir=best_params['n_reservoir'],
@@ -409,22 +442,23 @@ def main():
         alpha=best_params['alpha'],
         washout=best_params['washout'],
         seed=best_params['seed'],
-        n_folds=n_folds
+        n_folds=n_folds,
+        reservoir_type=reservoir_type, graph_dir=graph_dir,
     )
-    
+
     if final_result:
         print(f"\n   Val Boost Accuracy: {final_result['val_boost_acc']:.2%}")
         print(f"   Val RMSE (direction): {final_result['val_rmse']:.4f}")
         print(f"   MSE Ratio: {final_result['mse_ratio']:.2f}")
         print(f"   Acc Difference: {final_result['acc_diff']:.2%}")
         print(f"   Combined Score: {final_result['score']:.4f}")
-    
-    print(f"\n⏱️  Total search time: {total_time:.0f}s ({total_time/60:.1f} min)")
-    
-    # Save best config
-    output_file = Path("best_config_binary_search.json")
+
+    print(f"\nTotal search time: {total_time:.0f}s ({total_time/60:.1f} min)")
+
+    # Save best config (filename includes reservoir type so connectome and
+    # random results live side-by-side and are easy to tell apart).
+    output_file = Path(f"best_config_binary_search_{reservoir_type}.json")
     with open(output_file, 'w') as f:
-        # Convert numpy types to Python types
         config_to_save = {}
         for k, v in best_params.items():
             if isinstance(v, (np.integer, np.floating)):
@@ -433,28 +467,19 @@ def main():
                 config_to_save[k] = list(v)
             else:
                 config_to_save[k] = v
-        
         json.dump({
+            'reservoir_type': reservoir_type,
+            'graph_dir': str(graph_dir) if graph_dir else None,
             'best_config': config_to_save,
             'final_metrics': final_result if final_result else {},
             'search_time': total_time,
-            'search_depth': SEARCH_DEPTH
+            'search_depth': SEARCH_DEPTH,
         }, f, indent=2)
-    
-    print(f"\n💾 Best configuration saved to: {output_file}")
-    
+
+    print(f"\nBest configuration saved to: {output_file}")
     print(f"\n{'='*80}")
-    print("✅ BINARY SEARCH COMPLETATO!")
+    print("BINARY SEARCH COMPLETE")
     print(f"{'='*80}")
-    
-    print(f"\n💡 Prossimi passi:")
-    print(f"   1. Copia i parametri migliori in configuration.py:")
-    print(f"      ALPHA = {best_params['alpha']:.2e}")
-    print(f"      N_RESERVOIR = {best_params['n_reservoir']}")
-    print(f"      WASHOUT = {best_params['washout']}")
-    print(f"      SPECTRAL_RADIUS = {best_params['spectral_radius']:.2f}")
-    print(f"   2. Ri-esegui train_slither_reservoir.py con i nuovi parametri")
-    
     return 0
 
 

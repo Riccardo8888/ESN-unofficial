@@ -1,34 +1,44 @@
 """
-Grid Search Mirato - Focus sui Parametri Promettenti
-====================================================
+Focused Grid Search around the most promising hyperparameter region.
 
-Invece di esplorare tutto lo spazio, testa solo range stretti
-attorno ai parametri che hanno già dimostrato di funzionare bene:
-- N_RESERVOIR: 500-750 (non troppo piccolo)
-- ALPHA: 0.005-0.02 (bilanciamento regolarizzazione)
-- SPECTRAL_RADIUS: 0.9-1.2 (dinamiche ricche)
-- WASHOUT: 40-60 (non troppo alto)
+By default this targets the **brain-connectome** reservoir (the canonical
+research target).  Pass ``--reservoir random`` for the random-matrix
+baseline that produced the original best_config_focused_grid.json numbers.
 """
 
+import argparse
 import numpy as np
 import sys
 import time
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent))
+# Ensure we can import sibling scripts and the package modules.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from hyperparameter_search_binary import train_and_evaluate
+from hyperparameter_search_binary import train_and_evaluate, _find_default_graph_dir
 from vnicktest.scripts.configuration import *
 from utilities.data_loader import load_all_data
 
+
 def main():
+    parser = argparse.ArgumentParser(description="Focused grid search")
+    parser.add_argument('--reservoir', choices=['connectome', 'random'], default='connectome')
+    parser.add_argument('--graph-dir', type=str, default=None)
+    args = parser.parse_args()
+    reservoir_type = args.reservoir
+    graph_dir = Path(args.graph_dir) if args.graph_dir else (
+        _find_default_graph_dir() if reservoir_type == 'connectome' else None
+    )
+    print(f"\n[focused-grid] reservoir_type={reservoir_type}"
+          + (f"  graph_dir={graph_dir}" if graph_dir else ""))
     print("\n" + "="*80)
     print("🎯 FOCUSED GRID SEARCH - Parametri Promettenti")
     print("="*80)
     
     # Load data
-    print(f"\n📁 Caricamento dati da: {SLITHER_DATA_PATH}")
-    X_list, y_list, session_names = load_all_data(SLITHER_DATA_PATH, verbose=True)
+    print(f"\nLoading data from: {SLITHER_DATA_PATH}")
+    X_list, y_list, session_names, _usernames = load_all_data(SLITHER_DATA_PATH, verbose=True)
     
     if len(X_list) == 0:
         print("\n❌ No data found!")
@@ -93,7 +103,8 @@ def main():
                         alpha=alpha,
                         washout=wash,
                         seed=42,
-                        n_folds=2
+                        n_folds=2,
+                        reservoir_type=reservoir_type, graph_dir=graph_dir,
                     )
                     
                     if result:
@@ -147,25 +158,4 @@ def main():
     
     print(f"\n📊 BEST METRICS:")
     print(f"   Val Boost Accuracy: {best_metrics['val_boost_acc']:.2%}")
-    print(f"   MSE Ratio: {best_metrics['mse_ratio']:.2f}")
-    print(f"   Acc Difference: {best_metrics['acc_diff']:.2%}")
-    print(f"   Score: {best_metrics['score']:.4f}")
-    
-    # Save results
-    import json
-    output_file = Path("best_config_focused_grid.json")
-    with open(output_file, 'w') as f:
-        json.dump({
-            'best_config': best_config,
-            'best_metrics': best_metrics,
-            'top_5': [{'config': r['config'], 'metrics': r['metrics']} for r in results[:5]],
-            'search_time': total_time
-        }, f, indent=2)
-    
-    print(f"\n💾 Results saved to: {output_file}")
-    
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+ 
