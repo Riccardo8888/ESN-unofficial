@@ -1,0 +1,17 @@
+\begin{table}[h]
+    \centering
+    \caption{Slither.io online prediction sweep on the top-30\% sessions by frame count (AI\_bot excluded). Connectome and Erd\H{o}s--R\'enyi compared at three reservoir sizes under matched HPs ($\rho_W{=}1.05$, leak~$[0.1, 0.3]$, washout~50, ridge~$\alpha{=}10^{-2}$).}
+    \label{tab:slither_sweep}
+    \begin{tabular}{lrrrrrrr}
+        \hline
+        Reservoir & $N$ & test ang. & test top-3 & test err.~(\textdegree) & test boost & train ang. & train err.~(\textdegree) \\
+        \hline
+        Connectome & 300 & 0.5579 & 0.7132 & 18.50 & 0.8139 & 0.5738 & 16.00 \\
+        Connectome & 500 & 0.5715 & 0.7141 & 16.73 & 0.8133 & 0.6136 & 13.68 \\
+        Connectome & 1000 & 0.5698 & 0.7160 & 16.71 & 0.8195 & 0.6684 & 11.07 \\
+        ER & 300 & 0.5577 & 0.7177 & 18.05 & 0.7918 & 0.5730 & 16.16 \\
+        ER & 500 & 0.5721 & 0.7205 & 16.90 & 0.8131 & 0.6054 & 14.17 \\
+        ER & 1000 & 0.5702 & 0.7195 & 17.15 & 0.8298 & 0.6687 & 10.89 \\
+        \hline
+    \end{tabular}
+\end{table}

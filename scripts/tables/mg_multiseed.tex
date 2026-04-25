@@ -1,0 +1,15 @@
+\begin{table}[h]
+    \centering
+    \caption{Reproducibility check: Mackey--Glass MC across multiple RNG seeds ($N{=}234$, tuned HPs, single-brain connectome).}
+    \label{tab:mg_multiseed}
+    \begin{tabular}{lrrrrr}
+        \hline
+        Reservoir & mean MC & std & min & max & $n$ seeds \\
+        \hline
+        ER & 0.9954 & 0.0002 & 0.9951 & 0.9957 & 5 \\
+        FC & 0.9957 & 0.0001 & 0.9955 & 0.9959 & 5 \\
+        Gaussian & 0.9956 & 0.0004 & 0.9953 & 0.9963 & 5 \\
+        Connectome & 0.8652 & 0.1732 & 0.5215 & 0.9760 & 5 \\
+        \hline
+    \end{tabular}
+\end{table}

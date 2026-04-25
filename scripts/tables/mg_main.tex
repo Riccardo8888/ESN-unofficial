@@ -1,0 +1,15 @@
+\begin{table}[h]
+    \centering
+    \caption{Mackey--Glass one-step prediction at tuned hyper-parameters ($\rho_W{=}0.7$, leak $[0.2,0.7]$, washout $200$, ridge $\alpha{=}1e-06$, $N{=}234$, single-brain connectome).}
+    \label{tab:mg_main}
+    \begin{tabular}{lrrrr}
+        \hline
+        Reservoir & MC & $R^2$ & NRMSE & fit time (s) \\
+        \hline
+        ER & 0.9951 & 1.0000 & 0.0049 & 0.05 \\
+        FC & 0.9955 & 1.0000 & 0.0045 & 0.05 \\
+        Gaussian & 0.9953 & 1.0000 & 0.0047 & 0.05 \\
+        Connectome & 0.9815 & 0.9997 & 0.0185 & 0.06 \\
+        \hline
+    \end{tabular}
+\end{table}
