@@ -1,450 +1,272 @@
 #!/usr/bin/env python3
 """
-Training ESN per Slither.io usando Brain Connectome Reservoir
+Train Slither.io ESN using the Brain-Connectome Reservoir.
 
-Questo script usa brain_connectome_reservoir.py invece di reservoir.py:
-- Usa struttura del connettoma cerebrale invece di matrice random
-- Più biologicamente plausibile
-- Potenzialmente migliori prestazioni
-
-Autori: Nick & Riccardo
-Data: 27 Ottobre 2025
+Mirrors `train_slither_reservoir.py` (the random-reservoir baseline) but
+substitutes the recurrent matrix with a real Human-Connectome-Project
+adjacency loaded from a directory of GraphML files.  All other steps -- data
+loading, train/test split, ridge regression, evaluation, per-user analysis,
+and result logging -- are identical, so results are directly comparable to
+the random-reservoir runs in TRAINING_RESULTS.txt.
 """
 
 import sys
 from pathlib import Path
 import numpy as np
+import json
+import argparse
 import warnings
 from datetime import datetime
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Add parent directory to path so the vnicktest scripts can import
+# `vnicktest.scripts.configuration`, `utilities`, and `reservoirs`.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from vnicktest.scripts.configuration import *
-from utilities.data_loader import load_all_data
+from vnicktest.scripts.configuration import (
+    SLITHER_DATA_PATH, OUTPUT_PATH, TEST_SPLIT, RANDOM_SEED,
+    N_RESERVOIR, SPECTRAL_RADIUS, INPUT_SCALE, LEAK_RATE_MIN, LEAK_RATE_MAX,
+    ALPHA, WASHOUT, print_config,
+)
+from utilities.data_loader import load_all_data, train_test_split
 from utilities.metrics import (
-    compute_direction_metrics,
+    compute_all_metrics,
+    print_metrics,
+    compute_angle_classification_metrics,
     compute_boost_metrics,
-    plot_predictions,
-    save_results
+    compare_metrics,
 )
 from reservoirs.brain_connectome_reservoir import ConnectomeReservoir
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
-def compute_wout(X, Y, alpha=1e-3):
+
+def compute_wout(X, Y, T_washout, alpha):
+    """Ridge regression: Wout = (X^T X + alpha I)^{-1} X^T Y."""
+    X_train = X[T_washout:]
+    Y_train = Y[T_washout:]
+    R = X_train.T @ X_train
+    P = X_train.T @ Y_train
+    return np.linalg.solve(R + alpha * np.eye(X_train.shape[1]), P)
+
+
+def find_default_graph_dir() -> Path:
     """
-    Compute output weights using ridge regression.
-    
-    Args:
-        X: Reservoir states [n_samples, n_neurons]
-        Y: Target outputs [n_samples, n_outputs]
-        alpha: Regularization parameter
-    
-    Returns:
-        Wout: Output weights [n_neurons, n_outputs]
+    Pick a sensible default GraphML folder if the user did not specify one.
+    Prefer the largest available connectome resolution under data/folder_path_*.
     """
-    # Ridge regression: Wout = (X^T X + alpha*I)^-1 X^T Y
-    R = X.T @ X
-    P = X.T @ Y
-    Wout = np.linalg.solve(R + alpha * np.eye(X.shape[1]), P)
-    return Wout
-
-
-def check_brain_connectome_available():
-    """Check if brain connectome files are available."""
-    base_dir = Path(__file__).parent
-    graphml_files = list(base_dir.glob("*.graphml"))
-    
-    if not graphml_files:
-        print("\n" + "="*80)
-        print("⚠️  ATTENZIONE: Nessun file brain connectome (.graphml) trovato!")
-        print("="*80)
-        print("\nPer usare il brain connectome reservoir, hai bisogno di file .graphml")
-        print("che contengono la struttura del connettoma cerebrale.")
-        print("\nOpzioni:")
-        print("  1. Scarica brain connectome dataset (es. C. elegans, Human Connectome)")
-        print("  2. Genera grafi sintetici che simulano strutture cerebrali")
-        print("  3. Usa il fallback a reservoir random (meno interessante)")
-        print("\nPer ora questo script terminerà. Usa 'train_slither_reservoir.py' oppure")
-        print("'train_slither_esn.py' se vuoi usare reservoir random classici.")
-        print("="*80 + "\n")
-        return False
-    
-    print(f"\n✅ Trovati {len(graphml_files)} file brain connectome:")
-    for f in graphml_files[:5]:  # Show first 5
-        print(f"   - {f.name}")
-    if len(graphml_files) > 5:
-        print(f"   ... e altri {len(graphml_files) - 5} file")
-    print()
-    return True
-
-
-def train_connectome_esn(
-    X_train, Y_train, X_test, Y_test,
-    n_inputs, graph_dir,
-    n_reservoir=1000,
-    spectral_radius=1.25,
-    leak_range=(0.1, 0.3),
-    alpha=1e-3,
-    washout=50,
-    seed=42,
-    verbose=True
-):
-    """
-    Train ESN using brain connectome reservoir.
-    
-    Args:
-        X_train: Training input sequences [n_samples, seq_len, n_features]
-        Y_train: Training targets [n_samples, n_outputs]
-        X_test: Test input sequences
-        Y_test: Test targets
-        n_inputs: Number of input features
-        graph_dir: Directory containing .graphml brain connectome files
-        n_reservoir: Target number of neurons (will resize brain graph)
-        spectral_radius: Spectral radius for W matrix
-        leak_range: Range for leak rates
-        alpha: Ridge regression regularization
-        washout: Number of initial timesteps to discard
-        seed: Random seed
-        verbose: Print progress
-    
-    Returns:
-        results: Dictionary with training results
-    """
-    if verbose:
-        print("\n" + "="*80)
-        print("🧠 TRAINING CON BRAIN CONNECTOME RESERVOIR")
-        print("="*80)
-        print(f"\n📊 Configurazione:")
-        print(f"   Brain connectome dir: {graph_dir}")
-        print(f"   Target reservoir size: {n_reservoir}")
-        print(f"   Spectral radius: {spectral_radius}")
-        print(f"   Leak range: {leak_range}")
-        print(f"   Alpha (regularization): {alpha}")
-        print(f"   Washout: {washout}")
-        print(f"   Random seed: {seed}")
-        
-    # Create brain connectome reservoir
-    if verbose:
-        print(f"\n🧬 Creazione Brain Connectome Reservoir...")
-    
-    try:
-        reservoir = ConnectomeReservoir(
-            n_inputs=n_inputs,
-            graph_dir=str(graph_dir),
-            target_size=n_reservoir,
-            rhow=spectral_radius,
-            leak_range=leak_range,
-            seed=seed,
-            combine='mean',  # Combine multiple connectomes by averaging
-            symmetric=True,  # Make connections symmetric
-            edge_attr='weight'  # Use edge weights if available
-        )
-        
-        actual_neurons = reservoir.n_neurons
-        if verbose:
-            print(f"   ✓ Reservoir creato con {actual_neurons} neuroni (basato su brain connectome)")
-            print(f"   ✓ Spectral radius: {spectral_radius}")
-            
-    except Exception as e:
-        print(f"\n❌ Errore nella creazione del brain connectome reservoir:")
-        print(f"   {str(e)}")
-        print("\nVerifica che i file .graphml siano nel formato corretto.")
-        raise
-    
-    # Flatten training sequences for state collection
-    n_train = len(X_train)
-    seq_len = X_train.shape[1]
-    
-    if verbose:
-        print(f"\n📈 Training set:")
-        print(f"   Samples: {n_train}")
-        print(f"   Sequence length: {seq_len}")
-        print(f"   Features: {n_inputs}")
-        print(f"   Total timesteps: {n_train * seq_len}")
-        print(f"   Washout per sequence: {washout}")
-        print(f"   Usable timesteps: {n_train * (seq_len - washout)}")
-    
-    # Collect reservoir states from all training sequences
-    if verbose:
-        print(f"\n🔄 Raccolta stati del reservoir...")
-    
-    all_states = []
-    all_targets = []
-    
-    for i in range(n_train):
-        if verbose and (i + 1) % 100 == 0:
-            print(f"   Processate {i+1}/{n_train} sequenze...")
-        
-        # Run reservoir forward
-        X_seq = reservoir.forward(X_train[i], collect_states=True)
-        
-        # Discard washout period
-        X_seq = X_seq[washout:]
-        
-        # Repeat target for all timesteps after washout
-        Y_seq = np.repeat(Y_train[i:i+1], len(X_seq), axis=0)
-        
-        all_states.append(X_seq)
-        all_targets.append(Y_seq)
-    
-    # Concatenate all sequences
-    X_train_collected = np.vstack(all_states)
-    Y_train_collected = np.vstack(all_targets)
-    
-    if verbose:
-        print(f"   ✓ Stati raccolti: {X_train_collected.shape}")
-        print(f"   ✓ Target: {Y_train_collected.shape}")
-    
-    # Train output weights with ridge regression
-    if verbose:
-        print(f"\n🎓 Training output weights (Ridge regression, alpha={alpha})...")
-    
-    wout = compute_wout(X_train_collected, Y_train_collected, alpha=alpha)
-    
-    if verbose:
-        print(f"   ✓ Wout shape: {wout.shape}")
-    
-    # Evaluate on training set
-    if verbose:
-        print(f"\n📊 Valutazione su training set...")
-    
-    train_predictions = []
-    train_targets = []
-    
-    for i in range(n_train):
-        X_seq = reservoir.forward(X_train[i], collect_states=True)
-        X_seq = X_seq[washout:]
-        
-        # Predict
-        Y_pred = X_seq @ wout
-        
-        # Use only last prediction (corresponds to target at end of sequence)
-        train_predictions.append(Y_pred[-1])
-        train_targets.append(Y_train[i])
-    
-    train_predictions = np.array(train_predictions)
-    train_targets = np.array(train_targets)
-    
-    # Compute training metrics
-    train_dir_metrics = compute_direction_metrics(
-        train_targets[:, :2], train_predictions[:, :2]
+    repo_root = Path(__file__).resolve().parents[2]
+    data_root = repo_root / "data"
+    candidates = [
+        data_root / "folder_path_1015",
+        data_root / "folder_path_463",
+        data_root / "folder_path_234",
+        data_root / "folder_path_129",
+        data_root / "folder_path_83",
+    ]
+    for c in candidates:
+        if c.is_dir() and any(c.glob("*.graphml")):
+            return c
+    raise FileNotFoundError(
+        f"No connectome .graphml folder found under {data_root}. "
+        f"Pass --graph-dir explicitly."
     )
-    train_boost_metrics = compute_boost_metrics(
-        train_targets[:, 2], train_predictions[:, 2]
-    )
-    
-    if verbose:
-        print(f"\n✅ Training Results:")
-        print(f"   Direction RMSE: {train_dir_metrics['rmse']:.4f}")
-        print(f"   Direction MAE: {train_dir_metrics['mae']:.4f}")
-        print(f"   Angular Error: {train_dir_metrics['angular_error_mean']:.2f}°")
-        print(f"   Boost Accuracy: {train_boost_metrics['accuracy']:.2%}")
-        print(f"   Boost F1 Score: {train_boost_metrics['f1_score']:.4f}")
-    
-    # Evaluate on test set
-    n_test = len(X_test)
-    
-    if verbose:
-        print(f"\n📊 Valutazione su test set ({n_test} samples)...")
-    
-    test_predictions = []
-    test_targets = []
-    
-    for i in range(n_test):
-        X_seq = reservoir.forward(X_test[i], collect_states=True)
-        X_seq = X_seq[washout:]
-        
-        # Predict
-        Y_pred = X_seq @ wout
-        
-        # Use only last prediction
-        test_predictions.append(Y_pred[-1])
-        test_targets.append(Y_test[i])
-    
-    test_predictions = np.array(test_predictions)
-    test_targets = np.array(test_targets)
-    
-    # Compute test metrics
-    test_dir_metrics = compute_direction_metrics(
-        test_targets[:, :2], test_predictions[:, :2]
-    )
-    test_boost_metrics = compute_boost_metrics(
-        test_targets[:, 2], test_predictions[:, 2]
-    )
-    
-    if verbose:
-        print(f"\n✅ Test Results:")
-        print(f"   Direction RMSE: {test_dir_metrics['rmse']:.4f}")
-        print(f"   Direction MAE: {test_dir_metrics['mae']:.4f}")
-        print(f"   Angular Error: {test_dir_metrics['angular_error_mean']:.2f}°")
-        print(f"   Boost Accuracy: {test_boost_metrics['accuracy']:.2%}")
-        print(f"   Boost F1 Score: {test_boost_metrics['f1_score']:.4f}")
-    
-    # Check for overfitting
-    if verbose:
-        print(f"\n🔍 Analisi Overfitting:")
-        train_mse = train_dir_metrics['rmse'] ** 2
-        test_mse = test_dir_metrics['rmse'] ** 2
-        ratio = test_mse / train_mse if train_mse > 0 else float('inf')
-        
-        print(f"   Train MSE: {train_mse:.4f}")
-        print(f"   Test MSE: {test_mse:.4f}")
-        print(f"   Test/Train ratio: {ratio:.3f}", end="")
-        
-        if ratio > 2.0:
-            print(" ⚠️  OVERFITTING FORTE")
-        elif ratio > 1.5:
-            print(" ⚠️  Overfitting medio")
-        elif ratio > 1.2:
-            print(" ✓ Lieve overfitting (normale)")
-        else:
-            print(" ✅ Ottimo!")
-        
-        acc_diff = train_boost_metrics['accuracy'] - test_boost_metrics['accuracy']
-        print(f"   Accuracy difference: {acc_diff:.4f}", end="")
-        
-        if acc_diff > 0.2:
-            print(" ⚠️  OVERFITTING FORTE")
-        elif acc_diff > 0.1:
-            print(" ⚠️  Overfitting medio")
-        else:
-            print(" ✓ Buono")
-    
-    # Return results
-    results = {
-        'reservoir': reservoir,
-        'wout': wout,
-        'train_predictions': train_predictions,
-        'train_targets': train_targets,
-        'test_predictions': test_predictions,
-        'test_targets': test_targets,
-        'train_metrics': {
-            'direction': train_dir_metrics,
-            'boost': train_boost_metrics
-        },
-        'test_metrics': {
-            'direction': test_dir_metrics,
-            'boost': test_boost_metrics
-        },
-        'config': {
-            'n_reservoir': actual_neurons,
-            'spectral_radius': spectral_radius,
-            'leak_range': leak_range,
-            'alpha': alpha,
-            'washout': washout,
-            'seed': seed,
-            'graph_dir': str(graph_dir),
-            'reservoir_type': 'brain_connectome'
-        }
-    }
-    
-    return results
 
 
 def main():
-    """Main training function."""
-    print("\n" + "="*80)
-    print("🐍 SLITHER.IO ESN TRAINING - BRAIN CONNECTOME RESERVOIR")
-    print("="*80)
-    
-    # Check if brain connectome files are available
-    base_dir = Path(__file__).parent
-    if not check_brain_connectome_available():
-        print("\n💡 Suggerimento: Usa 'hyperparameter_search.py' per ottimizzare")
-        print("   i parametri con il reservoir che hai disponibile.")
+    parser = argparse.ArgumentParser(description="Train Slither.io ESN with the brain connectome reservoir.")
+    parser.add_argument("--graph-dir", type=str, default=None,
+                        help="Folder of .graphml connectome files. Defaults to the largest folder_path_* under data/.")
+    parser.add_argument("--n-reservoir", type=int, default=N_RESERVOIR)
+    parser.add_argument("--spectral-radius", type=float, default=SPECTRAL_RADIUS)
+    parser.add_argument("--alpha", type=float, default=ALPHA)
+    parser.add_argument("--washout", type=int, default=WASHOUT)
+    parser.add_argument("--seed", type=int, default=RANDOM_SEED)
+    args = parser.parse_args()
+
+    print_config()
+    graph_dir = Path(args.graph_dir) if args.graph_dir else find_default_graph_dir()
+    print(f"\n[connectome] Using graph directory: {graph_dir}")
+
+    # ----- Step 1: load data -----------------------------------------------
+    print("\n" + "=" * 60)
+    print("STEP 1: LOADING DATA")
+    print("=" * 60)
+    X_list, y_list, session_names, usernames = load_all_data(SLITHER_DATA_PATH, verbose=True)
+    if not X_list:
+        print("\nERROR: no Slither sessions found.")
         return 1
-    
-    # Load data
-    print(f"\n📁 Caricamento dati da: {SLITHER_DATA_PATH}")
-    
-    try:
-        X_list, y_list, session_names = load_all_data(SLITHER_DATA_PATH, verbose=True)
-    except Exception as e:
-        print(f"\n❌ Errore nel caricamento dati: {e}")
-        return 1
-    
-    # Split train/test using random chunks from each session (NEW!)
-    print(f"\n🔀 Split train/test usando chunk casuali da ogni sessione (test_size={TEST_SPLIT})...")
-    from utilities.data_loader import train_test_split as split_sessions
-    X_train, y_train, X_test, y_test = split_sessions(
-        X_list, y_list, session_names, 
-        test_size=TEST_SPLIT, 
-        random_seed=RANDOM_SEED,
-        use_chunks=True  # NEW: More homogeneous test set
+
+    # ----- Step 2: train / test split --------------------------------------
+    print("\n" + "=" * 60)
+    print("STEP 2: TRAIN/TEST SPLIT (random chunks per session)")
+    print("=" * 60)
+    X_train_cat, y_train_cat, X_test_cat, y_test_cat, test_user_indices = train_test_split(
+        X_list, y_list, session_names, usernames,
+        test_size=TEST_SPLIT,
+        random_seed=args.seed,
+        use_chunks=True,
     )
-    
-    print(f"   ✓ Training frames: {X_train.shape[0]}")
-    print(f"   ✓ Test frames: {X_test.shape[0]}")
-    print(f"   ✓ Test ratio: {X_test.shape[0] / (X_train.shape[0] + X_test.shape[0]):.1%}")
-    
-    # Reshape to sequences [n_samples, seq_len, features]
-    # Each sample is already a time sequence from load_all_data
-    # We need to add time dimension for reservoir processing
-    print(f"\n🔄 Preparazione sequenze per reservoir...")
-    
-    # Group by original session length to maintain temporal structure
-    # For now, treat each sample as a 1-frame sequence
-    X_train = X_train.reshape(len(X_train), 1, -1)
-    X_test = X_test.reshape(len(X_test), 1, -1)
-    
-    print(f"   ✓ X_train shape: {X_train.shape}")
-    print(f"   ✓ y_train shape: {y_train.shape}")
-    print(f"   ✓ X_test shape: {X_test.shape}")
-    print(f"   ✓ y_test shape: {y_test.shape}")
-    
-    n_inputs = X_train.shape[2]
-    
-    # Train ESN with brain connectome
-    results = train_connectome_esn(
-        X_train, y_train, X_test, y_test,
-        n_inputs=n_inputs,
-        graph_dir=base_dir,  # Look for .graphml files in project root
-        n_reservoir=N_RESERVOIR,
-        spectral_radius=SPECTRAL_RADIUS,
-        leak_range=(0.1, 0.3),  # Default leak range
-        alpha=ALPHA,
-        washout=WASHOUT,
-        seed=RANDOM_SEED,
-        verbose=True
+    print(f"  Train: X={X_train_cat.shape}  y={y_train_cat.shape}")
+    print(f"  Test : X={X_test_cat.shape}  y={y_test_cat.shape}")
+
+    # ----- Step 3: build the connectome reservoir --------------------------
+    print("\n" + "=" * 60)
+    print("STEP 3: BUILDING CONNECTOME RESERVOIR")
+    print("=" * 60)
+    reservoir = ConnectomeReservoir(
+        n_inputs=X_train_cat.shape[1],
+        graph_dir=str(graph_dir),
+        n_neurons=args.n_reservoir,
+        spectral_radius=args.spectral_radius,
+        leak_range=(LEAK_RATE_MIN, LEAK_RATE_MAX),
+        edge_attr="weight",
+        combine="mean",
+        symmetric=True,
+        seed=args.seed,
+        input_scale=INPUT_SCALE,
     )
-    
-    # Save results
-    output_dir = Path(__file__).parent / "slither_esn_results" / f"connectome_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    print(f"  Reservoir size      : {reservoir.n_neurons}")
+    print(f"  Target spectral radius: {reservoir.target_spectral_radius}")
+    print(f"  Leak rate range     : [{LEAK_RATE_MIN}, {LEAK_RATE_MAX}]")
+
+    # ----- Step 4: collect training states ---------------------------------
+    print("\n" + "=" * 60)
+    print("STEP 4: COLLECTING RESERVOIR STATES (TRAIN)")
+    print("=" * 60)
+    X_train_states = reservoir.forward(X_train_cat, collect_states=True)
+    print(f"  States: {X_train_states.shape}")
+
+    # ----- Step 5: fit readout ---------------------------------------------
+    print("\n" + "=" * 60)
+    print("STEP 5: TRAINING OUTPUT WEIGHTS (ridge regression)")
+    print("=" * 60)
+    wout = compute_wout(X_train_states, y_train_cat,
+                        T_washout=args.washout, alpha=args.alpha)
+    print(f"  W_out: {wout.shape}")
+
+    # ----- Step 6: evaluate ------------------------------------------------
+    print("\n" + "=" * 60)
+    print("STEP 6: EVALUATING")
+    print("=" * 60)
+    y_train_pred = X_train_states @ wout
+    y_train_true = y_train_cat
+    y_train_pred = y_train_pred[args.washout:]
+    y_train_true = y_train_true[args.washout:]
+    train_metrics = compute_all_metrics(y_train_true, y_train_pred)
+    print_metrics(train_metrics, "Training")
+
+    X_test_states = reservoir.forward(X_test_cat, collect_states=True)
+    y_test_pred = X_test_states @ wout
+    y_test_true = y_test_cat
+    y_test_pred = y_test_pred[args.washout:]
+    y_test_true = y_test_true[args.washout:]
+    test_metrics = compute_all_metrics(y_test_true, y_test_pred)
+    print_metrics(test_metrics, "Test")
+
+    compare_metrics(train_metrics, test_metrics)
+
+    # ----- Step 6b: per-user analysis -------------------------------------
+    print("\n" + "=" * 60)
+    print("STEP 6b: PER-USER ANALYSIS")
+    print("=" * 60)
+    test_user_indices_adj = test_user_indices[args.washout:]
+    unique_users = {}
+    for idx in range(len(X_list)):
+        username = usernames[idx]
+        unique_users.setdefault(username, []).append(idx)
+
+    print(f"\n{'User':<25} {'Frames':<10} {'Boost Acc':<12} {'Angle Acc':<12} {'Angular Err':<12}")
+    print("-" * 75)
+    user_stats = {}
+    for username, session_indices in unique_users.items():
+        user_mask = np.isin(test_user_indices_adj, session_indices)
+        if not user_mask.any():
+            continue
+        y_user_pred = y_test_pred[user_mask]
+        y_user_true = y_test_true[user_mask]
+        ang = compute_angle_classification_metrics(y_user_true, y_user_pred)
+        bst = compute_boost_metrics(y_user_true, y_user_pred)
+        user_stats[username] = {
+            "n_frames": int(len(y_user_pred)),
+            "boost_accuracy": float(bst["boost_accuracy"]),
+            "angle_accuracy": float(ang["accuracy"]),
+            "angular_error_deg": float(ang["angular_error_deg"]),
+        }
+        print(f"{username:<25} {len(y_user_pred):<10} "
+              f"{bst['boost_accuracy']:>10.2%}  "
+              f"{ang['accuracy']:>10.2%}  "
+              f"{ang['angular_error_deg']:>10.2f}°")
+
+    # ----- Step 7: save model + results ------------------------------------
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = OUTPUT_PATH / f"connectome_{timestamp}"
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    print(f"\n💾 Salvataggio risultati in: {output_dir}")
-    
-    # Save model
-    np.save(output_dir / "wout.npy", results['wout'])
-    np.save(output_dir / "config.npy", results['config'])
-    
-    # Plot results
-    plot_predictions(
-        results['test_targets'][:100],  # First 100 samples
-        results['test_predictions'][:100],
-        output_dir / "predictions_test.png"
+
+    # Save reservoir + W_out as a single npz so it can be reloaded later.
+    np.savez(
+        output_dir / "reservoir_model.npz",
+        W=reservoir.W, Win=reservoir.Win, Win_bias=reservoir.Win_bias,
+        leak=reservoir.leak, W_out=wout,
+        n_inputs=reservoir.n_inputs, n_neurons=reservoir.n_neurons,
+        spectral_radius=reservoir.target_spectral_radius,
+        graph_dir=str(graph_dir),
     )
-    
-    # Save metrics
-    save_results(results, output_dir / "metrics.json")
-    
-    print(f"   ✓ Model salvato")
-    print(f"   ✓ Plots salvati")
-    print(f"   ✓ Metrics salvati")
-    
-    print("\n" + "="*80)
-    print("✅ TRAINING COMPLETATO CON SUCCESSO!")
-    print("="*80)
-    print(f"\nRisultati salvati in: {output_dir}")
-    print("\n💡 Prossimi passi:")
-    print("   1. Analizza i grafici in slither_esn_results/")
-    print("   2. Se c'è overfitting, prova 'hyperparameter_search.py'")
-    print("   3. Confronta con reservoir random usando 'compare_reservoirs.py'")
-    print("   4. Raccogli più dati per migliorare le prestazioni")
-    print()
-    
+
+    results = {
+        "timestamp": timestamp,
+        "config": {
+            "reservoir_type": "brain_connectome",
+            "graph_dir": str(graph_dir),
+            "n_reservoir": int(reservoir.n_neurons),
+            "spectral_radius": float(reservoir.target_spectral_radius),
+            "leak_rate_min": LEAK_RATE_MIN,
+            "leak_rate_max": LEAK_RATE_MAX,
+            "alpha": float(args.alpha),
+            "washout": int(args.washout),
+            "test_split": float(TEST_SPLIT),
+            "random_seed": int(args.seed),
+        },
+        "training": train_metrics,
+        "test": test_metrics,
+        "per_user": user_stats,
+    }
+
+    def _convert(obj):
+        if isinstance(obj, (np.integer,)):
+            return int(obj)
+        if isinstance(obj, (np.floating,)):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return obj
+
+    with open(output_dir / "training_results.json", "w") as f:
+        json.dump(results, f, indent=2, default=_convert)
+    print(f"\nSaved model and results to: {output_dir}")
+
+    # ----- Step 8: append to TRAINING_RESULTS.txt for parity with the baseline
+    log_file = Path(__file__).parent / "TRAINING_RESULTS.txt"
+    if not log_file.exists():
+        log_file.write_text("=" * 80 + "\nSLITHER.IO ESN TRAINING RESULTS LOG\n" + "=" * 80 + "\n")
+    with open(log_file, "a") as f:
+        f.write(f"\n{'='*80}\n")
+        f.write(f"Training: {timestamp}  (CONNECTOME RESERVOIR)\n")
+        f.write(f"{'='*80}\n")
+        f.write(f"Graph dir         : {graph_dir}\n")
+        f.write(f"Reservoir size    : {reservoir.n_neurons}\n")
+        f.write(f"Spectral radius   : {reservoir.target_spectral_radius}\n")
+        f.write(f"Alpha             : {args.alpha}\n")
+        f.write(f"Washout           : {args.washout} frames\n")
+        f.write(f"Total frames      : {X_train_cat.shape[0] + X_test_cat.shape[0]}\n\n")
+        f.write("Test metrics:\n")
+        f.write(f"  Angle Accuracy : {test_metrics['accuracy']*100:.2f}%\n")
+        f.write(f"  Top-3 Accuracy : {test_metrics['top3_accuracy']*100:.2f}%\n")
+        f.write(f"  Angular Error  : {test_metrics['angular_error_deg']:.2f} deg\n")
+        f.write(f"  Boost Accuracy : {test_metrics['boost_accuracy']*100:.2f}%\n")
+        f.write(f"Output: {output_dir.name}\n")
+        f.write("-" * 80 + "\n")
+
+    print("\nDONE.")
     return 0
 
 

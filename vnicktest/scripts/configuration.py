@@ -14,8 +14,13 @@ from pathlib import Path
 # Path to slither.io scraper data directory (LOCAL in this workspace)
 SLITHER_DATA_PATH = Path(__file__).parent / "data"
 
-# Path to save trained models and results
-OUTPUT_PATH = Path("/Users/nick/Desktop/SSN-Folder/ESN-unofficial/slither_esn_results")
+# Path to save trained models and results.
+# Resolves relative to the repo root so this works on any machine.
+# Override with the SLITHER_OUTPUT_PATH environment variable if needed.
+import os
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+OUTPUT_PATH = Path(os.environ.get("SLITHER_OUTPUT_PATH",
+                                  _REPO_ROOT / "slither_esn_results"))
 OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
 # ===========================================
@@ -159,11 +164,3 @@ def print_config():
     print(f"\nTraining Configuration:")
     print(f"  - Alpha (regularization): {ALPHA}")
     print(f"  - Washout: {WASHOUT} frames")
-    print(f"  - Test split: {TEST_SPLIT * 100:.0f}%")
-    print(f"  - Random seed: {RANDOM_SEED}")
-    print(f"  - Min frames per session: {MIN_FRAMES_PER_SESSION}")
-    print("=" * 60)
-
-
-if __name__ == "__main__":
-    print_config()
