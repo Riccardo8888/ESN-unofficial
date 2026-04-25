@@ -1,0 +1,56 @@
+{
+  "config": {
+    "reservoir": "all",
+    "n_neurons": 234,
+    "spectral_radius": 1.25,
+    "leak_min": 0.1,
+    "leak_max": 0.3,
+    "washout": 200,
+    "ridge": 1e-06,
+    "train_len": 1500,
+    "test_len": 2000,
+    "graph_dir": "/tmp/mg_single_brain_234",
+    "p_er": 0.1,
+    "seed": 42,
+    "output": "mackey_glass_results_n234_single_brain.json"
+  },
+  "graph_dir": "/tmp/mg_single_brain_234",
+  "results": [
+    {
+      "reservoir": "erdos_renyi",
+      "n_neurons": 234,
+      "spectral_radius": 1.25,
+      "MC": 0.9918914915811231,
+      "R2": 0.9999342520945482,
+      "NRMSE": 0.008108508418876883,
+      "fit_time_s": 0.058950185775756836
+    },
+    {
+      "reservoir": "fully_connected",
+      "n_neurons": 234,
+      "spectral_radius": 1.25,
+      "MC": 0.9926166819467724,
+      "R2": 0.9999454866172836,
+      "NRMSE": 0.00738331805322753,
+      "fit_time_s": 0.05588722229003906
+    },
+    {
+      "reservoir": "gaussian",
+      "n_neurons": 234,
+      "spectral_radius": 1.25,
+      "MC": 0.9914046159900075,
+      "R2": 0.9999261193774596,
+      "NRMSE": 0.008595384009992478,
+      "fit_time_s": 0.05684924125671387
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 1.25,
+      "MC": 0.9118314443186555,
+      "R2": 0.9922263067549935,
+      "NRMSE": 0.08816855568134452,
+      "fit_time_s": 0.07902908325195312
+    }
+  ]
+}

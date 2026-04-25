@@ -1,0 +1,246 @@
+{
+  "edge_attr": [
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9745696018711539,
+      "R2": 0.9993532948422746,
+      "NRMSE": 0.025430398128846114,
+      "fit_time_s": 0.07135987281799316,
+      "edge_attr": "unweighted"
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9699275437784121,
+      "R2": 0.9990956473684032,
+      "NRMSE": 0.030072456221587943,
+      "fit_time_s": 0.05404186248779297,
+      "edge_attr": "FA_mean"
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9106570676661936,
+      "R2": 0.9920178416202926,
+      "NRMSE": 0.08934293233380637,
+      "fit_time_s": 0.06351518630981445,
+      "edge_attr": "number_of_fibers"
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9758102341634812,
+      "R2": 0.9994148552084924,
+      "NRMSE": 0.02418976583651877,
+      "fit_time_s": 0.07977938652038574,
+      "edge_attr": "fiber_length_mean"
+    }
+  ],
+  "multiseed": [
+    {
+      "reservoir": "erdos_renyi",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9950956880025194,
+      "R2": 0.9999759477250485,
+      "NRMSE": 0.004904311997480698,
+      "fit_time_s": 0.0681910514831543,
+      "seed": 42
+    },
+    {
+      "reservoir": "erdos_renyi",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9950944529994356,
+      "R2": 0.999975935609843,
+      "NRMSE": 0.004905547000564441,
+      "fit_time_s": 0.06806111335754395,
+      "seed": 7
+    },
+    {
+      "reservoir": "erdos_renyi",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9955636594295382,
+      "R2": 0.9999803188833388,
+      "NRMSE": 0.004436340570461859,
+      "fit_time_s": 0.06286358833312988,
+      "seed": 11
+    },
+    {
+      "reservoir": "erdos_renyi",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9955141292386164,
+      "R2": 0.9999798769645305,
+      "NRMSE": 0.00448587076138365,
+      "fit_time_s": 0.07070279121398926,
+      "seed": 23
+    },
+    {
+      "reservoir": "erdos_renyi",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9956690295291982,
+      "R2": 0.9999812426957303,
+      "NRMSE": 0.00433097047080183,
+      "fit_time_s": 0.0645606517791748,
+      "seed": 99
+    },
+    {
+      "reservoir": "fully_connected",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9955099582220932,
+      "R2": 0.9999798395258529,
+      "NRMSE": 0.004490041777906743,
+      "fit_time_s": 0.0711374282836914,
+      "seed": 42
+    },
+    {
+      "reservoir": "fully_connected",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9957301884215711,
+      "R2": 0.9999817687100073,
+      "NRMSE": 0.004269811578428838,
+      "fit_time_s": 0.062150001525878906,
+      "seed": 7
+    },
+    {
+      "reservoir": "fully_connected",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9958848426090993,
+      "R2": 0.9999830654805051,
+      "NRMSE": 0.004115157390900767,
+      "fit_time_s": 0.052925825119018555,
+      "seed": 11
+    },
+    {
+      "reservoir": "fully_connected",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9955991772753938,
+      "R2": 0.9999806327603267,
+      "NRMSE": 0.0044008227246061645,
+      "fit_time_s": 0.062238216400146484,
+      "seed": 23
+    },
+    {
+      "reservoir": "fully_connected",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9956454064606715,
+      "R2": 0.9999810375160668,
+      "NRMSE": 0.004354593539328541,
+      "fit_time_s": 0.0617527961730957,
+      "seed": 99
+    },
+    {
+      "reservoir": "gaussian",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.995288113645618,
+      "R2": 0.9999777981281069,
+      "NRMSE": 0.004711886354382059,
+      "fit_time_s": 0.0661013126373291,
+      "seed": 42
+    },
+    {
+      "reservoir": "gaussian",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9954195928607423,
+      "R2": 0.9999790198715004,
+      "NRMSE": 0.004580407139257697,
+      "fit_time_s": 0.06381058692932129,
+      "seed": 7
+    },
+    {
+      "reservoir": "gaussian",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.996289447722853,
+      "R2": 0.9999862318024954,
+      "NRMSE": 0.0037105522771469814,
+      "fit_time_s": 0.06977152824401855,
+      "seed": 11
+    },
+    {
+      "reservoir": "gaussian",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9952964219509518,
+      "R2": 0.9999778763546561,
+      "NRMSE": 0.0047035780490481925,
+      "fit_time_s": 0.07005119323730469,
+      "seed": 23
+    },
+    {
+      "reservoir": "gaussian",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9958942153092493,
+      "R2": 0.9999831425329263,
+      "NRMSE": 0.004105784690750735,
+      "fit_time_s": 0.07195758819580078,
+      "seed": 99
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9745696018711539,
+      "R2": 0.9993532948422746,
+      "NRMSE": 0.025430398128846114,
+      "fit_time_s": 0.057151079177856445,
+      "seed": 42
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9759755577411988,
+      "R2": 0.9994228261924607,
+      "NRMSE": 0.024024442258801213,
+      "fit_time_s": 0.0796806812286377,
+      "seed": 7
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9244861762810557,
+      "R2": 0.9942976627052041,
+      "NRMSE": 0.07551382371894438,
+      "fit_time_s": 0.07333183288574219,
+      "seed": 11
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.9293954993219334,
+      "R2": 0.9950150043565171,
+      "NRMSE": 0.07060450067806659,
+      "fit_time_s": 0.0514676570892334,
+      "seed": 23
+    },
+    {
+      "reservoir": "connectome",
+      "n_neurons": 234,
+      "spectral_radius": 0.7,
+      "MC": 0.5214730186904564,
+      "R2": 0.7710119443117076,
+      "NRMSE": 0.4785269813095436,
+      "fit_time_s": 0.0745246410369873,
+      "seed": 99
+    }
+  ]
+}
