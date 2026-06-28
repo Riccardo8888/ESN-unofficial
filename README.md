@@ -70,11 +70,11 @@ Every example runs on the committed mock fixtures, so they validate the pipeline
 scientific claim. To get real results, drop scraper sessions under `data/<user>/session_*` and a real
 connectome `.graphml` under `generated_artifacts/graphs/`.
 
-## Honest status
+## Status
 
-The numerical core is correct and well-tested (94 tests), but the project's central hypothesis — that
-real brain-connectome wiring confers a computational advantage — is **not supported by the evidence
-gathered here.** The contribution of this repo is the rigorous, baseline-grounded tooling that makes
+The numerical core is correct and well-tested (94 tests), but the project's central hypothesis that
+real brain-connectome wiring confers a computational advantage is **not supported by the evidence
+gathered here.** The contribution of this repo is the baseline-grounded tooling that makes
 that verdict honest, not a positive result. Concretely:
 
 - **Static task (Iris): no topological advantage, and the reservoir does not help.** The
@@ -83,11 +83,11 @@ that verdict honest, not a positive result. Concretely:
   (one-hot ridge ~0.80; logistic regression ~0.97), because Iris has no temporal structure for a
   reservoir's memory to exploit.
 - **Temporal tasks (Memory Capacity + NARMA-10): mostly negative, one small caveated positive.** On
-  Memory Capacity the real wiring is *worse* than its own null (z≈−3.1) — topology hurts. On NARMA-10 the
+  Memory Capacity the real wiring is *worse* than its own null (z≈−3.1) topology hurts. On NARMA-10 the
   real connectome beats the null with a small but consistent effect (z≈+3.67, p=0.010 on the mean
   connectome; positive on all 5 HCP subjects, individually significant on 3/5), but the gain is only
   ~3.5% relative NRMSE. On *both* tasks the connectome trails a plain signed-asymmetric random ESN by a
-  wide margin (NARMA NRMSE 0.41 vs 0.66; MC 20.8 vs 6.8), because the undirected → symmetric matrix is a
+  wide margin (NARMA NRMSE 0.41 vs 0.66; MC 20.8 vs 6.8), because the undirected symmetric matrix is a
   real handicap for memory.
 - **The one positive signal is not yet paper-grade.** The degree-preserving null shuffles weights, so it
   conflates *wiring* with *weight-placement*; a stricter weight-preserving null and a real temporal
