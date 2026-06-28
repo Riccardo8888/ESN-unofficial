@@ -19,6 +19,17 @@ proceedings PDF and arXiv:2105.07674: Split-MNIST, class-incremental, ESN column
 - Suárez, L.E., Richards, B.A., Lajoie, G., Mišić, B. (2021). *Learning function from structure in neuromorphic networks.* Nature Machine Intelligence 3:771-786.
 - Suárez, L.E. et al. (2024). *Connectome-based reservoir computing with the conn2res toolbox.* Nature Communications 15:656. Covers directed and undirected connectomes, ridge readout, null-model (rewired) baselines, and α swept across the critical point.
 
+## Connectome data source (braingraph.org / WU-Minn HCP)
+The committed connectomes (`data/connectomes/scale83`) are a subset of the braingraph.org database, derived
+from WU-Minn HCP imaging data, and ship under the HCP Open Access Data Use Terms (see
+`../data/connectomes/DATA_TERMS.md`). Required acknowledgement: *"Data were provided [in part] by the Human
+Connectome Project, WU-Minn Consortium (Principal Investigators: David Van Essen and Kamil Ugurbil;
+1U54MH091657) funded by the 16 NIH Institutes and Centers that support the NIH Blueprint for Neuroscience
+Research; and by the McDonnell Center for Systems Neuroscience at Washington University."*
+- Kerepesi, C., Szalkai, B., Varga, B., Grolmusz, V. (2017). *The braingraph.org Database of High Resolution Structural Connectomes and the Brain Graph Tools.* Cognitive Neurodynamics 11(5):483-486. https://doi.org/10.1007/s11571-017-9445-1
+- Kerepesi, C., Szalkai, B., Varga, B., Grolmusz, V. (2016). *How to Direct the Edges of the Connectomes: Dynamics of the Consensus Connectomes and the Development of the Connections in the Human Brain.* PLoS One 11(6):e0158680. https://doi.org/10.1371/journal.pone.0158680
+- Szalkai, B., Kerepesi, C., Varga, B., Grolmusz, V. (2019). *High-Resolution Directed Human Connectomes and the Consensus Connectome Dynamics.* PLoS One 14(4):e0215473. https://doi.org/10.1371/journal.pone.0215473
+
 ## Online / incremental readouts
 - Jaeger, H. (2003). *Adaptive Nonlinear System Identification with Echo State Networks.* NIPS 15. The RLS readout for ESNs.
 - Sussillo, D., Abbott, L.F. (2009). *Generating Coherent Patterns of Activity from Chaotic Neural Networks.* Neuron 63(4):544-557. FORCE. **[planned]** The bundled online readout is plain RLS, which is not FORCE: FORCE feeds the live output back into the recurrent loop during training. Do not cite FORCE for the current RLS readout.

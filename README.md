@@ -107,10 +107,18 @@ that verdict honest, not a positive result. Concretely:
 ## License & data
 
 - Code: MIT (see [`LICENSE`](LICENSE)).
-- Data: the connectomes under `data/connectomes/` are derived from third-party neuroimaging data (the
-  Human Connectome Project) and are subject to the original provider's terms, not the MIT license. Verify
-  the HCP Open Access Data Use Terms (and add acknowledgement) before redistributing publicly, or remove
-  them and point to the source. See [`data/connectomes/README.md`](data/connectomes/README.md).
+- Data: the connectomes under `data/connectomes/` are a subset of the **braingraph.org** structural
+  connectome database, derived from **WU-Minn Human Connectome Project (HCP)** imaging data. They are NOT
+  under the MIT license; they are redistributed under the WU-Minn HCP Open Access Data Use Terms (permitted
+  for derived data by Term 4). If you use them you must accept those terms, not attempt to identify
+  subjects, include the HCP acknowledgement, and cite the braingraph.org papers — see
+  [`data/connectomes/DATA_TERMS.md`](data/connectomes/DATA_TERMS.md) and
+  [`data/connectomes/README.md`](data/connectomes/README.md).
+
+> **Acknowledgement.** Data were provided [in part] by the Human Connectome Project, WU-Minn Consortium
+> (Principal Investigators: David Van Essen and Kamil Ugurbil; 1U54MH091657) funded by the 16 NIH
+> Institutes and Centers that support the NIH Blueprint for Neuroscience Research; and by the McDonnell
+> Center for Systems Neuroscience at Washington University.
 
 ## CI
 
@@ -118,8 +126,8 @@ that verdict honest, not a positive result. Concretely:
 fresh-install smoke check, the portable suite (`pytest -m "not golden"`), the bit-frozen `golden`
 characterization tests as a separate single-platform regression gate, and `pytest --nbmake examples/`.
 
-It stays dormant until two things are true: a GitHub remote exists, and the HCP connectome redistribution
-terms are confirmed (or `data/connectomes/` is removed or made CI-optional). See **License & data** above.
+It stays dormant until a GitHub remote exists (the connectome data redistribution terms are addressed —
+the data ships under the WU-Minn HCP Open Access Data Use Terms; see **License & data** above).
 Until then, run the identical gate locally:
 
 ```bash
