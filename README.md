@@ -1,13 +1,15 @@
-# ESN-unofficial — connectome reservoir computing → continuous learning
+# ESN-unofficial: connectome reservoir computing → continuous learning
 
-A reservoir-computing toolkit built around a **brain-connectome Echo State Network**: the recurrent
+A reservoir-computing toolkit built around a brain-connectome Echo State Network. The recurrent
 weights are a fixed connectome (or a random graph), and only a linear readout is trained. The project
-is being turned into a **package for continuous learning** (online + continual) — see
+is being turned into a package for continuous learning, both online and continual; see
 [`docs/CONTINUOUS_LEARNING_DESIGN.md`](docs/CONTINUOUS_LEARNING_DESIGN.md).
 
-> **Status:** active cleanup/build. Phases 0–3 done (packaged engines + consolidated examples + tests);
-> the continuous-learning layer (`reservoirs/learning/`) and methodology hardening are next. The full
-> plan and current state live in [`CLEANUP_PLAN.md`](CLEANUP_PLAN.md) and [`docs/HANDOFF.md`](docs/HANDOFF.md).
+> **Status:** build complete (phases 0 to 6). That covers the packaged engines, the continuous-learning
+> layer (`reservoirs/learning/`: online RLS/LMS/NLMS, conceptor continual readouts, and benchmark/metrics),
+> consolidated examples, methodology hardening, and 94 tests. It has been reviewed only with an internal
+> adversarial self-review (AI multi-agent, self-scored); the findings were addressed, but this has not had
+> an external or third-party audit and is not yet paper-grade (see "Honest status" below).
 
 ## Layout
 
@@ -20,8 +22,7 @@ examples/       runnable, executed example notebooks (see below)
 tests/          pytest suite incl. characterization "golden" tests that pin engine behavior
 data/           committed mock demo sessions (data/mock_user_*/session_*)
 generated_artifacts/graphs/mock_connectome.graphml   committed 60-node mock connectome
-archive/        superseded notebooks/engines/exports (kept, not deleted)
-docs/           design + handoff docs
+docs/           design + methodology docs (internal process notes under docs/internal/)
 ```
 
 ## Quickstart
@@ -30,10 +31,10 @@ docs/           design + handoff docs
 pip install -r requirements.txt          # pinned; or: pip install -e ".[dev]"
 
 # run the examples (each finds the repo root automatically and uses the committed mock fixtures)
-jupyter notebook examples/01_esn_tutorial_iris.ipynb
+jupyter notebook examples/combined_examples.ipynb
 
 # run the test suite (fast; no private data needed)
-pytest tests/ -q                         # 46 tests
+pytest tests/ -q                         # 94 tests
 
 # execute all example notebooks (what CI does)
 pytest --nbmake examples/ -q
@@ -47,40 +48,80 @@ states = res.transform(U, washout=10)     # frozen reservoir -> states; train yo
 
 ## Examples
 
-| notebook | what it shows |
-|---|---|
-| `01_esn_tutorial_iris` | ESN on Iris with **random** reservoirs (fully-connected / ring / gaussian / Erdős–Rényi) |
-| `02_connectome_iris`   | the **connectome** reservoir on the same Iris benchmark (compare biological vs random) |
-| `03_slither_pipeline`  | end-to-end **slither.io** gameplay prediction on the mock data (angle + boost) |
-| `04_continuous_time_dynamics` | continuous-time (Euler) reservoir dynamics across connectivity topologies |
-| `05_online_learning` | streaming RLS readout (learning curve + concept-drift tracking via the forgetting factor) |
-| `06_continual_benchmark` | `ContinualBenchmark` + `cl_metrics`: catastrophic forgetting (BWT) vs forgetting-free conceptors |
-| `07_null_model_baseline` | real connectome vs **degree-preserving rewired null** vs random ESN (the key topology baseline) |
+All demos live in one merged notebook, [`examples/combined_examples.ipynb`](examples/combined_examples.ipynb).
+The first code cell holds every import, and each section below is one demo, in order:
 
-All examples run on the committed **mock** fixtures, so they validate the pipeline rather than make a
+| section | what it shows |
+|---|---|
+| ESN tutorial (Iris) | ESN on Iris with random reservoirs (fully-connected / ring / gaussian / Erdős-Rényi) |
+| Connectome (Iris) | the connectome reservoir on the same Iris benchmark |
+| Slither pipeline | end-to-end slither.io gameplay prediction on mock data (angle + boost) |
+| Continuous-time dynamics | continuous-time (Euler) reservoir dynamics across topologies |
+| Online learning | streaming RLS readout (learning curve + concept-drift tracking) |
+| Continual benchmark | `ContinualBenchmark` + `cl_metrics`: catastrophic forgetting vs forgetting-free conceptors |
+| Null-model baseline | real connectome vs degree-preserving null vs random ESN; no measured topological advantage on Iris |
+| Temporal benchmark | Memory Capacity + NARMA-10; topology gives a small NARMA edge (z≈+3.67, p=0.010) but hurts MC (z≈−3.1), and both trail a plain random ESN |
+| Hyperparameter tuning | random search: on Iris (tuned 0.90 > default 0.83 > linear 0.70, matches logistic 0.90) and on the temporal benchmark |
+
+Every example runs on the committed mock fixtures, so they validate the pipeline rather than make a
 scientific claim. To get real results, drop scraper sessions under `data/<user>/session_*` and a real
 connectome `.graphml` under `generated_artifacts/graphs/`.
 
+## Honest status
+
+The numerical core is correct and well-tested (94 tests), but the project's central hypothesis — that
+real brain-connectome wiring confers a computational advantage — is **not supported by the evidence
+gathered here.** The contribution of this repo is the rigorous, baseline-grounded tooling that makes
+that verdict honest, not a positive result. Concretely:
+
+- **Static task (Iris): no topological advantage, and the reservoir does not help.** The
+  degree-preserving null is statistically indistinguishable from the real connectome (z≈0.5). The
+  reservoir pipeline (~0.70 to 0.73) underperforms even a no-reservoir linear model on the raw features
+  (one-hot ridge ~0.80; logistic regression ~0.97), because Iris has no temporal structure for a
+  reservoir's memory to exploit.
+- **Temporal tasks (Memory Capacity + NARMA-10): mostly negative, one small caveated positive.** On
+  Memory Capacity the real wiring is *worse* than its own null (z≈−3.1) — topology hurts. On NARMA-10 the
+  real connectome beats the null with a small but consistent effect (z≈+3.67, p=0.010 on the mean
+  connectome; positive on all 5 HCP subjects, individually significant on 3/5), but the gain is only
+  ~3.5% relative NRMSE. On *both* tasks the connectome trails a plain signed-asymmetric random ESN by a
+  wide margin (NARMA NRMSE 0.41 vs 0.66; MC 20.8 vs 6.8), because the undirected → symmetric matrix is a
+  real handicap for memory.
+- **The one positive signal is not yet paper-grade.** The degree-preserving null shuffles weights, so it
+  conflates *wiring* with *weight-placement*; a stricter weight-preserving null and a real temporal
+  dataset are the next steps before any topology claim. See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
+- **Always read accuracy beside a baseline.** Use `reservoirs.baselines` (majority-class, no-reservoir
+  linear/ridge, and real-vs-null). Mock-data numbers are plumbing checks, not evidence (the mock labels
+  are leaked from input features).
+
 ## Notes / limitations
 
-- Structural connectomes from non-invasive imaging are **undirected**, so the reservoir matrix is
-  symmetric (real eigenvalues, no oscillatory modes) — a stated limitation, not a bug. Directionality is
+- Structural connectomes from non-invasive imaging are undirected, so the reservoir matrix is symmetric
+  (real eigenvalues, no oscillatory modes). That is a stated limitation, not a bug. Directionality is
   not recoverable non-invasively.
-- The slither split **defaults to a leakage-free session-grouped split** (`group_by_session=True`); the
-  original window-shuffle (which leaks across overlapping windows and biases test metrics) is available as
-  `group_by_session=False` for reproduction.
-- See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) for the full list of modelling choices + limitations and
-  [`docs/REFERENCES.md`](docs/REFERENCES.md) for citations.
+- The slither split defaults to a leakage-free session-grouped split (`group_by_session=True`). The
+  original window-shuffle, which leaks across overlapping windows and biases test metrics, is still
+  available as `group_by_session=False` for reproduction.
+- See [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md) for the full list of modelling choices and limitations,
+  and [`docs/REFERENCES.md`](docs/REFERENCES.md) for citations.
 
 ## License & data
 
-- **Code:** MIT (see [`LICENSE`](LICENSE)).
-- **Data:** the connectomes under `data/connectomes/` are derived from third-party neuroimaging data
-  (Human Connectome Project) and are **subject to the original provider's terms, not the MIT license**.
-  Verify the HCP Open Access Data Use Terms (and add acknowledgement) before redistributing publicly, or
-  remove them and point to the source. See [`data/connectomes/README.md`](data/connectomes/README.md).
+- Code: MIT (see [`LICENSE`](LICENSE)).
+- Data: the connectomes under `data/connectomes/` are derived from third-party neuroimaging data (the
+  Human Connectome Project) and are subject to the original provider's terms, not the MIT license. Verify
+  the HCP Open Access Data Use Terms (and add acknowledgement) before redistributing publicly, or remove
+  them and point to the source. See [`data/connectomes/README.md`](data/connectomes/README.md).
 
 ## CI
 
-`.github/workflows/ci.yml` runs `pytest tests/` + `pytest --nbmake examples/` on push/PR. It activates
-once the repo is pushed to a GitHub remote (currently the repo is local-only — pushing is deferred).
+`.github/workflows/ci.yml` (Ubuntu, Python 3.11/3.12, BLAS threads pinned for deterministic goldens) runs a
+fresh-install smoke check, the portable suite (`pytest -m "not golden"`), the bit-frozen `golden`
+characterization tests as a separate single-platform regression gate, and `pytest --nbmake examples/`.
+
+It stays dormant until two things are true: a GitHub remote exists, and the HCP connectome redistribution
+terms are confirmed (or `data/connectomes/` is removed or made CI-optional). See **License & data** above.
+Until then, run the identical gate locally:
+
+```bash
+python scripts/local_ci.py     # imports + portable suite + goldens + notebook execution
+```

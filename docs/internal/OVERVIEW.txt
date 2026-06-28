@@ -1,0 +1,220 @@
+===============================================================================
+ PROJECT OVERVIEW: ESN / brain-connectome reservoir computing
+ A plain-language map of the repo plus what changed in this review session.
+ (Generated 2026-06-27. For the full per-file tour see docs/internal/FILE_MAP.md.)
+===============================================================================
+
+
+ 1. THE BIG PICTURE: what is this project?
+
+It is a "reservoir computing" toolkit. The idea behind reservoir computing, or
+Echo State Networks (ESN), is this:
+
+   input  ->  [ RESERVOIR: a big fixed recurrent network, NEVER trained ]  ->
+              [ READOUT: one small linear layer, the ONLY thing trained ]  -> output
+
+The twist in this project is that the reservoir's wiring is a real BRAIN
+CONNECTOME (a graph of how brain regions connect, measured by MRI) instead of a
+random matrix. The question the project is built to answer:
+
+   "Does using real brain wiring (or training a readout online/continually)
+    actually help, compared to a random network or no reservoir at all?"
+
+There are two "applications" used as test tasks:
+   - Iris      : the classic 3-flower classification dataset (a tutorial task).
+   - slither.io: predicting a player's next move from gameplay (a demo task,
+                 currently only on synthetic MOCK data).
+
+On top of that sits a "continuous learning" layer, the product the package is
+built around:
+   - ONLINE learning   : update the readout one sample at a time (RLS/LMS/NLMS).
+   - CONTINUAL learning: learn a sequence of tasks without forgetting old ones
+                         (conceptors), measured with standard CL metrics.
+
+
+ 2. WHY ARE MOST FILES .py AND NOT .ipynb (notebooks)?
+
+This project started life as ~15 near-duplicate Jupyter notebooks and was
+deliberately refactored into a proper Python PACKAGE. The rule now:
+
+   .py  files = the LIBRARY    (reservoirs/, slither/, tests/), the reusable code
+   .ipynb files = the DEMOS    (examples/combined_examples.ipynb), which show it running
+
+Why the library is .py and not notebooks:
+   * Version control : .py gives clean line-by-line git diffs; notebooks are
+                       JSON with embedded images, so the diffs are huge and unreadable.
+   * Reuse           : you can "import" a .py module; you cannot cleanly import
+                       a notebook from another notebook.
+   * Testing         : pytest runs .py functions directly; notebooks are awkward
+                       to unit-test.
+   * Install         : "pip install" ships .py packages; notebooks don't install.
+   * No hidden state : .py runs top-to-bottom; notebook cells can run out of
+                       order and hide bugs in stale state.
+
+So the notebooks did not disappear; they BECAME the 7 examples/ that import and
+exercise the library. A library plus example notebooks is the standard shape for
+a publishable scientific package.
+
+
+ 3. HOW THE FILES FIT TOGETHER  (by role)
+     [NEW]     = created in this review session
+     [CHANGED] = edited in this review session
+     (no tag)  = pre-existing
+
+CORE LIBRARY, in reservoirs/
+   connectome.py        [CHANGED] The main engine. Builds the recurrent
+                                  matrix W from a connectome graph, scales it,
+                                  runs the leaky dynamics, and offers
+                                  fit/predict/transform (ridge readout).
+   random.py                      Random-wiring reservoirs (fully-connected,
+                                  ring, gaussian, sparse Erdos-Renyi); these are
+                                  the baselines the connectome is compared against.
+   nulls.py                       Makes a "degree-preserving null", a rewired
+                                  connectome that keeps the same connection
+                                  counts but scrambles WHICH nodes connect. The
+                                  scientific control for "is it the wiring?".
+   _batch.py                      Speed helper: run many windows at once.
+   baselines.py         [NEW]     Honest-baseline harness: majority-class, no-reservoir
+                                  linear/logistic, and real-vs-null z-score. Makes it
+                                  impossible to report a reservoir number without a fair
+                                  comparison (see sec. 4).
+   tasks.py             [NEW]     Temporal benchmark: Memory Capacity + NARMA-10 (tasks
+                                  that actually NEED memory), with real-vs-null topology
+                                  tests averaged over draws + an empirical p-value.
+   tuning.py            [NEW]     Random-search hyperparameter tuner (search a space,
+                                  pick the best config on a validation split, report it
+                                  beside the baselines).
+   __init__.py                    Declares the public names of the package.
+
+CONTINUAL-LEARNING LAYER, in reservoirs/learning/
+   online.py                      RLS / LMS / NLMS online readouts (learn one
+                                  sample at a time) + a classifier wrapper.
+   continual.py                   Conceptors (the "learn without forgetting"
+                                  method) + a per-class conceptor classifier.
+   metrics.py                     The CL scorecards: ACC / BWT / FWT (GEM) and
+                                  forgetting / intransigence (RWalk).
+   benchmark.py                   Drives a sequence of tasks through a readout
+                                  and builds the accuracy matrix the metrics use.
+
+APPLICATION, in slither/
+   data.py              ( * )     Loads sessions, builds features, makes windows,
+                                  and splits train/test (default: leakage-free
+                                  session grouping).
+   mock.py                        Generates SYNTHETIC demo gameplay so the
+                                  pipeline runs without private data. NOTE: the
+                                  mock labels are leaked from the inputs, so mock
+                                  numbers are plumbing checks, NOT evidence.
+   metrics.py           [CHANGED] Task metrics + the closed-form ridge readout +
+                                  a "leaked-feature baseline" honesty helper.
+   config.py                      Constants (window length, washout, ridge, ...).
+
+EXAMPLES (one merged runnable notebook), in examples/
+   combined_examples.ipynb [NEW]  All demos in ONE notebook: the first code cell is
+                                  solely imports, then one section per demo, in order:
+                                  (1) ESN tutorial on Iris (random reservoirs)
+                                  (2) connectome reservoir on Iris
+                                  (3) slither pipeline on mock data
+                                  (4) continuous-time (Euler) dynamics
+                                  (5) online learning (streaming RLS + drift)
+                                  (6) continual benchmark (forgetting vs conceptors)
+                                  (7) null-model baseline (no topology advantage on Iris)
+                                  (8) temporal benchmark (Memory Capacity + NARMA-10)
+                                  (9) hyperparameter tuning (random search)
+                                  The former notebooks 01 to 09 were merged in and removed.
+
+TESTS, in tests/
+   test_*.py                      The pytest suite (now 94 tests, was 67).
+   test_baselines.py    [NEW]     11 new tests for the baseline harness.
+   golden/                        Frozen reference numbers that "pin" the engine
+                                  so a refactor cannot silently change results.
+
+DOCS, in docs/ (and repo root)
+   HANDOFF.md           [CHANGED] Entry point: status + history (test count fixed).
+   FILE_MAP.md          [CHANGED] Full per-file tour (test counts fixed).
+   METHODOLOGY.md       [CHANGED] Modelling choices + honest limitations
+                                  (edge-weight default wording corrected).
+   AUDIT.md / REVIEW.md           PRIOR self-reviews (AI, self-scored). Treat as
+                                  claims, not external validation.
+   CONTINUOUS_LEARNING_DESIGN.md  The design spec for the CL layer.
+   REFERENCES.md                  Citations.
+   README.md (root)     [CHANGED] Front page (honesty + status section fixed).
+   pyproject.toml (root)[CHANGED] Packaging (dependencies trimmed, see sec. 5).
+   OVERVIEW.txt (root)  [NEW]     This file.
+
+archive/  = the old 15 notebooks + old engines, kept (not deleted) as a safety
+            net. Not part of the shipping package.
+
+
+ 4. NEW THIS SESSION (c): the baseline-comparison harness
+     reservoirs/baselines.py  +  tests/test_baselines.py
+
+WHY IT EXISTS: the #1 problem the review found is that NOTHING in the repo was
+ever compared against a trivial baseline, so "the connectome / the reservoir
+helps" was never actually demonstrated. This module makes that comparison a
+one-liner. Functions:
+
+   majority_class_baseline(y_train, y_test)
+        Accuracy if you just always guess the most common class (= "chance").
+
+   linear_readout_baseline(X_train, y_train, X_test, y_test)
+        Accuracy of a plain linear model on the RAW inputs, with NO reservoir.
+        If this already solves the task, the reservoir isn't earning its keep.
+
+   logistic_readout_baseline(...)   [optional, uses scikit-learn if installed]
+        A stronger linear bar (logistic regression).
+
+   reservoir_vs_null(adjacency, score_fn, n_null=20)
+        Real connectome score vs an ensemble of degree-preserving nulls,
+        returns a z-score. Generalizes example 07. (z near 0 = no wiring effect.)
+
+   compare_classification(reservoir_accuracy, X_train, y_train, X_test, y_test)
+        Bundles reservoir vs majority vs linear into one dict with the gaps.
+
+   format_comparison(result)
+        Pretty table for printing in a notebook.
+
+EXAMPLE (what you'd add next to any reservoir accuracy):
+   from reservoirs.baselines import compare_classification, format_comparison
+   res = compare_classification(reservoir_acc, X_tr, y_tr, X_te, y_te)
+   print(format_comparison(res))
+
+THE HONEST NUMBERS this surfaces on Iris (this is the point):
+   reservoir pipeline ............ ~0.70 to 0.73
+   linear readout (ridge, no res.) ~0.80   (one-hot least-squares ceiling)
+   logistic regression ........... ~0.97
+   So the reservoir LOSES to a plain linear model on Iris. Iris is static
+   (no time structure), so a reservoir's memory has nothing to exploit. A
+   genuinely TEMPORAL task is needed before claiming the dynamics help.
+
+
+ 5. WHAT ELSE CHANGED THIS SESSION (b): the "do first" fixes
+
+   * connectome.py / slither/metrics.py: the ridge readout now solves the
+     equations in float64 (was float32, which could silently corrupt the
+     trained weights at the super-critical default settings).
+   * connectome.py: when the requested edge weight is missing, the warning now
+     recommends 'number_of_fibers' (the real connection strength) instead of the
+     alphabetically-first 'FA_mean' (which is NOT a weight).
+   * README.md: changed "Independently audited" to the honest "internal AI
+     self-review, not paper-grade"; added an "Honest status" section; reframed
+     example 07 as "no measured topological advantage".
+   * METHODOLOGY.md: clarified that 'number_of_fibers' is NOT the default.
+   * pyproject.toml: pandas / matplotlib / scikit-learn were declared as core
+     dependencies but are only used by the notebooks, so they moved to a
+     "notebooks" extra; bumped python floor to 3.11 (matches the pinned numpy).
+   * HANDOFF.md / FILE_MAP.md / README: reconciled the contradictory test counts to
+     94 (67 pre-existing + 11 baseline-harness + 7 temporal-benchmark + 9 tuning tests).
+
+   ALL 94 TESTS PASS after these changes. Nothing has been committed; the
+   changes are in the working tree for you to review.
+
+
+ 6. BOTTOM LINE
+
+The engine and the math are correct and well-tested. The gap to "paper-grade"
+is SCIENTIFIC, not a bug: none of the three central ideas (brain wiring,
+reservoir dynamics, conceptor continual learning) has yet been shown to beat a
+trivial baseline on a task that actually needs them. The new baselines harness
+is the tool to make that honest comparison from now on; the next real step is a
+temporal benchmark where a reservoir's memory could plausibly matter.
+===============================================================================
