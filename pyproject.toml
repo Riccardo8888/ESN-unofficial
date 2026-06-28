@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "esn-connectome"
+version = "0.1.0"
+description = "Brain-connectome Echo State Network reservoir computing with online + continual learning"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy>=2.0",
+    "networkx>=3.0",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "scikit-learn>=1.3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "nbmake>=1.5", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6"]
+zarr = ["zarr>=2.16"]   # only for real .zarr scraper sessions
+
+[tool.setuptools]
+packages = ["reservoirs", "reservoirs.learning", "slither"]
+
+[tool.pytest.ini_options]
+# Only collect the real test suite; never recurse into archive/ (zarr-dependent nbconvert
+# exports that fail to import). Lets a fresh user run a bare `pytest` from the root.
+testpaths = ["tests"]
+norecursedirs = ["archive", "examples", "generated_artifacts", "data", "docs"]

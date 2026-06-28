@@ -1,0 +1,28 @@
+{
+  "seed": 7,
+  "numpy": "2.4.2",
+  "networkx": "3.6.1",
+  "n_goldens": 19,
+  "keys": [
+    "new_native_W",
+    "new_native_Win",
+    "new_native_Win_bias",
+    "new_native_leak",
+    "new_native_sr",
+    "new_native_states",
+    "new_up120_W",
+    "old_native_W",
+    "old_native_Win",
+    "old_native_input_bias",
+    "old_native_leak",
+    "old_native_sr",
+    "old_native_states",
+    "old_up120_W",
+    "rand_R1_leak",
+    "rand_R1_sr",
+    "rand_R1_states",
+    "rand_R1_w",
+    "rand_R1_win"
+  ],
+  "note": "Baseline pinned against pre-refactor code. See tests/README.md."
+}

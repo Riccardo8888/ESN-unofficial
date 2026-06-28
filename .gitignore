@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Test / tooling caches
+.pytest_cache/
+_nb_extracts/          # regenerable notebook extracts (docs/tools/extract_notebooks.py)
+
+# OS
+.DS_Store
+Thumbs.db
+
+# NOTE: tests/golden/*.npy ARE committed on purpose (the characterization baseline).

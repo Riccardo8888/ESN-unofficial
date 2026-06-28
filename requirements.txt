@@ -1,0 +1,21 @@
+# Pinned to the development environment for reproducibility.
+# numpy + networkx pins matter most: the PCG64 RNG stream and read_graphml node ordering
+# are version-sensitive and the characterization goldens were generated against these.
+
+# --- runtime ---
+numpy==2.4.2
+networkx==3.6.1
+pandas==3.0.1
+matplotlib==3.10.8
+scikit-learn==1.8.0
+
+# Optional — only needed to read real .zarr scraper sessions (mock .npy data needs nothing):
+# zarr>=2.16
+
+# --- dev / tests / notebook execution ---
+pytest==9.1.1
+nbmake>=1.5          # pytest --nbmake to execute example notebooks in CI
+nbformat==5.10.4
+nbclient==0.10.4
+nbconvert==7.17.0
+ipykernel==7.2.0
