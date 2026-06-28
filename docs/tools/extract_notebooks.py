@@ -1,8 +1,8 @@
 """
-extract_notebooks.py — make lightweight, context-friendly extracts of the repo's
-Jupyter notebooks (code + markdown cells, with image outputs stripped and long
-text outputs truncated). The raw .ipynb files are multi-MB of embedded base64
-images; reading them directly will blow up an LLM context window. Run this first,
+extract_notebooks.py makes lightweight, context-friendly extracts of the repo's
+Jupyter notebooks (code and markdown cells, with image outputs stripped and long
+text outputs truncated). The raw .ipynb files hold multi-MB of embedded base64
+images, so reading them directly will blow up an LLM context window. Run this first,
 then analyze the .txt extracts.
 
 Usage (from the repo root):
