@@ -7,18 +7,23 @@ name = "esn-connectome"
 version = "0.1.0"
 description = "Brain-connectome Echo State Network reservoir computing with online + continual learning"
 readme = "README.md"
-requires-python = ">=3.10"
+# numpy is pinned to 2.4.x in requirements.txt (load-bearing for the goldens), which needs >=3.11;
+# CI also only tests 3.11/3.12. Advertise the floor we actually support.
+requires-python = ">=3.11"
 license = { file = "LICENSE" }
+# Core runtime deps for the importable packages (reservoirs/, slither/) ONLY. These two are the
+# only things `import reservoirs`/`import slither` actually need. pandas/matplotlib/scikit-learn are
+# used solely by the example notebooks, so they live in the `notebooks` extra (not core).
 dependencies = [
     "numpy>=2.0",
     "networkx>=3.0",
-    "pandas>=2.0",
-    "matplotlib>=3.7",
-    "scikit-learn>=1.3",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "nbmake>=1.5", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6"]
+# Used only by examples/*.ipynb and reservoirs.baselines' optional sklearn-backed comparators.
+notebooks = ["pandas>=2.0", "matplotlib>=3.7", "scikit-learn>=1.3"]
+dev = ["pytest>=8", "nbmake>=1.5", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6",
+       "pandas>=2.0", "matplotlib>=3.7", "scikit-learn>=1.3"]
 zarr = ["zarr>=2.16"]   # only for real .zarr scraper sessions
 
 [tool.setuptools]
@@ -29,3 +34,6 @@ packages = ["reservoirs", "reservoirs.learning", "slither"]
 # exports that fail to import). Lets a fresh user run a bare `pytest` from the root.
 testpaths = ["tests"]
 norecursedirs = ["archive", "examples", "generated_artifacts", "data", "docs"]
+markers = [
+    "golden: bit-frozen characterization snapshots; a single-platform regression gate. The rest of the suite is platform-robust, so CI runs `-m 'not golden'` as the portable gate and the golden tests as a separate step.",
+]
