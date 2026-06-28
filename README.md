@@ -114,7 +114,7 @@ that verdict honest, not a positive result. Concretely:
   connectome database, derived from **WU-Minn Human Connectome Project (HCP)** imaging data. They are NOT
   under the MIT license; they are redistributed under the WU-Minn HCP Open Access Data Use Terms (permitted
   for derived data by Term 4). If you use them you must accept those terms, not attempt to identify
-  subjects, include the HCP acknowledgement, and cite the braingraph.org papers — see
+  subjects, include the HCP acknowledgement, and cite the braingraph.org papers see
   [`data/connectomes/DATA_TERMS.md`](data/connectomes/DATA_TERMS.md) and
   [`data/connectomes/README.md`](data/connectomes/README.md).
 
@@ -129,8 +129,7 @@ that verdict honest, not a positive result. Concretely:
 fresh-install smoke check, the portable suite (`pytest -m "not golden"`), the bit-frozen `golden`
 characterization tests as a separate single-platform regression gate, and `pytest --nbmake examples/`.
 
-It stays dormant until a GitHub remote exists (the connectome data redistribution terms are addressed —
-the data ships under the WU-Minn HCP Open Access Data Use Terms; see **License & data** above).
+It stays dormant until a GitHub remote exists (the connectome data redistribution terms are addressed the data ships under the WU-Minn HCP Open Access Data Use Terms; see **License & data** above).
 Until then, run the identical gate locally:
 
 ```bash
@@ -140,7 +139,7 @@ python scripts/local_ci.py     # imports + portable suite + goldens + notebook e
 ## Original project background
 
 This repository began as **"Reservoir Computing for Connectome Networks"** (original author: Victor
-Buendía). That early work — a rate-model / network-topology study — is preserved in the exploratory
+Buendía). That early work a rate-model / network-topology study is preserved in the exploratory
 notebooks under `test_particolari/` and `lorenz_testing/`, and the write-up is `ESN_official_paper.pdf`.
 The original project description is reproduced below for context.
 
@@ -153,9 +152,9 @@ The original project description is reproduced below for context.
 > reaches a stationary state (random initial conditions *rᵢ ∈ [0,1]*).
 >
 > ### Tasks (network topologies, as control reservoirs vs real data)
-> 1. **Fully connected** — all links equal weight, *Aᵢⱼ = J/N*.
-> 2. **Erdős–Rényi** — nodes connected with probability *p* (*k = pN*), *Aᵢⱼ = J/k* with prob. *p*, else 0.
-> 3. **Gaussian random** — fully connected, *Aᵢⱼ ~ 𝒩(0, J²/N)*.
-> 4. **Data integration** — real network data *Dᵢⱼ* via *Aᵢⱼ = J·Dᵢⱼ* (*J* an arbitrary scaling factor).
+> 1. **Fully connected**, all links equal weight, *Aᵢⱼ = J/N*.
+> 2. **Erdős–Rényi**, nodes connected with probability *p* (*k = pN*), *Aᵢⱼ = J/k* with prob. *p*, else 0.
+> 3. **Gaussian random**, fully connected, *Aᵢⱼ ~ 𝒩(0, J²/N)*.
+> 4. **Data integration**, real network data *Dᵢⱼ* via *Aᵢⱼ = J·Dᵢⱼ* (*J* an arbitrary scaling factor).
 >
 > Networks 1–3 serve as control reservoirs for comparison with real connectome data.
