@@ -26,7 +26,7 @@ def _iris():
     te = [i for i in range(150) if i not in tr]
     data = raw.copy()
     data[:, :4] = data[:, :4] / data[tr, :4].max(axis=0)
-    ts = np.arange(0, 50, 1.0)  # 50 steps — fast
+    ts = np.arange(0, 50, 1.0)  # 50 steps, kept short for speed
     u = np.array([np.vstack([np.sin(ts * 2 * np.pi * p[i]) for i in range(4)]).T for p in data[:, :4]])
     y = np.array([data[:, 4:]] * len(ts)).swapaxes(0, 1).astype(float)
     return u[tr], y[tr], u[te], y[te]
@@ -61,7 +61,7 @@ def test_learning_engines_clear_floor(name):
 
 
 def test_ring_runs_finite():
-    """Ring reservoir collapses to ~chance on this task — we only assert it runs & is finite."""
+    """Ring reservoir collapses to about chance on this task, so we only assert it runs and stays finite."""
     from reservoirs.random import Reservoir2
     np.random.seed(7)
     acc = _eval(Reservoir2(4, 60, rhow=1.25))

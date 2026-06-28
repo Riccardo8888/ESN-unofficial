@@ -1,20 +1,20 @@
 """
 Shared logic for the characterization (golden) tests.
 
-These pin the behavior of the KEPT engines — now imported from the `reservoirs/` package
-(Phase 2) — against goldens that were generated (Phase 1) from the original pre-package code.
-The fact that the package reproduces those goldens bit-for-bit is the proof that the
-"move into the package + shim" did not change any numbers.
+These pin the behavior of the kept engines, now imported from the `reservoirs/` package
+(Phase 2), against goldens that were generated (Phase 1) from the original pre-package code.
+The package reproduces those goldens bit-for-bit, which is the proof that the move into the
+package (plus the shim) did not change any numbers. The two kept engines are
+`reservoirs.connectome.ConnectomeReservoir` (formerly brain_connectome_reservoir_v0_1.py) and
+`reservoirs.random.Reservoir` (formerly reservoir.py).
 
-  - `reservoirs.connectome.ConnectomeReservoir`  ← was brain_connectome_reservoir_v0_1.py
-  - `reservoirs.random.Reservoir`                ← was reservoir.py
+The old connectome engine (`brain_connectome_reservoir.py`) was retired; its `old_native_Win` /
+`old_native_leak` goldens are now checked directly in `test_characterization.py`
+(`test_old_new_native_rng_identical_static`), which proves the new engine draws them identically.
 
-The OLD connectome engine (`brain_connectome_reservoir.py`) was archived; its goldens are
-verified separately in `test_legacy_old_engine.py` (which imports it from `archive/`).
-
-Determinism: connectome engine seeds an internal default_rng(7); the random engine uses the
-GLOBAL numpy RNG, so we np.random.seed(0) immediately before building it. All on the committed
-mock connectome (60 nodes, undirected), n_inputs=4, fixed deterministic input.
+Determinism: the connectome engine seeds an internal default_rng(7); the random engine uses the
+global numpy RNG, so we call np.random.seed(0) immediately before building it. Everything runs on
+the committed mock connectome (60 nodes, undirected), n_inputs=4, with a fixed deterministic input.
 """
 import os
 import sys
@@ -32,7 +32,7 @@ UPSCALE = 120  # > native 60 -> exercises random-projection upscale (new engine 
 
 
 def tiny_input(T=20, n=N_INPUTS):
-    """Deterministic input sequence [T, n] — no RNG involved."""
+    """Deterministic input sequence [T, n], no RNG involved."""
     idx = np.arange(T * n, dtype=np.float64).reshape(T, n)
     return np.sin(idx / 3.0)
 
@@ -55,7 +55,7 @@ def snapshot():
     snaps = {}
     u = tiny_input()
 
-    # --- canonical connectome engine (reservoirs.connectome)
+    # canonical connectome engine (reservoirs.connectome)
     rnew = build_new(spectral_radius=0.9)
     snaps["new_native_Win"] = np.asarray(rnew.Win)
     snaps["new_native_leak"] = np.asarray(rnew.leak)
@@ -66,7 +66,7 @@ def snapshot():
     rnew_up = build_new(spectral_radius=0.9, n_neurons=UPSCALE)  # random-projection upscale (default)
     snaps["new_up120_W"] = np.asarray(rnew_up.W)
 
-    # --- random engine (reservoirs.random; global RNG -> seed first)
+    # random engine (reservoirs.random; global RNG, so seed first)
     from reservoirs.random import Reservoir
     np.random.seed(0)
     rr = Reservoir(N_INPUTS, 30, rhow=1.25)

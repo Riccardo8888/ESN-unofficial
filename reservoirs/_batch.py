@@ -1,9 +1,11 @@
 """Vectorized leaky-integrator state collection across a batch of windows (Phase 5).
 
 The time loop is inherently sequential (x(t) depends on x(t-1)), but the B windows are
-independent, so each step is one GEMM over the whole batch instead of B separate matvecs —
-giving a ~B-fold speedup over the per-window Python loop, with identical dynamics (up to
-float associativity). Used by the engines' `collect_states_batch`.
+independent, so each step is one GEMM over the whole batch instead of B separate matvecs.
+The dynamics are identical to the per-window loop (up to float associativity). The speedup is
+modest and depends on batch and reservoir size: typically ≈1.5 to 2× in favourable regimes, and
+it can be slower than the loop for some B/N (matmul flops dominate at large N). Benchmark before
+relying on it. Used by the engines' `collect_states_batch`.
 """
 import numpy as np
 
@@ -12,7 +14,6 @@ def leaky_collect_batch(drive: np.ndarray, W: np.ndarray, leak: np.ndarray) -> n
     """Run the leaky-integrator reservoir for a batch.
 
     Parameters
-    ----------
     drive : [B, T, N]  precomputed input contribution per step (Win @ u + bias).
     W : [N, N]  recurrent weights.   leak : [N]  per-neuron leak.
 

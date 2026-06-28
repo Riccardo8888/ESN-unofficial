@@ -1,10 +1,10 @@
 """
-Regenerate the golden snapshots from the CURRENT engine code.
+Regenerate the golden snapshots from the current engine code.
 
-Run ONCE against the pre-refactor code to establish the baseline:
+Run this once against the pre-refactor code to establish the baseline:
     python tests/regen_goldens.py
 
-After a refactor, do NOT re-run this (that would defeat the purpose) — instead run
+After a refactor, don't re-run it; that would defeat the purpose. Instead run
 `python tests/test_characterization.py` (or `pytest tests/`) to verify the refactored
 code still reproduces these goldens. Only re-run this when an intended behavior change
 has been reviewed and the new numbers deliberately accepted.

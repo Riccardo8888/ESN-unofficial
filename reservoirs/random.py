@@ -6,27 +6,40 @@ bit-for-bit, plus descriptive aliases and a genuine sparse ``ErdosRenyiReservoir
 """
 import numpy as np
 
-from ._spectral import dense_spectral_radius
 from ._batch import leaky_collect_batch
+
+
+def dense_spectral_radius(A):
+    """Exact spectral radius via dense eigenvalues (matches the legacy `max(abs(eig))` convention).
+
+    Used by the random family (incl. `ErdosRenyiReservoir`). The connectome engine keeps its own
+    inline power-iteration `_spectral_radius` (golden-pinned), so the two are intentionally separate.
+    (Folded in from the former `reservoirs/_spectral.py`, whose only caller was this module.)
+    """
+    A = np.asarray(A)
+    if A.size == 0:
+        return 0.0
+    return float(np.max(np.abs(np.linalg.eigvals(A))))
 
 
 class Reservoir:
     def __init__(self, n_inputs, n_neurons, rhow=1.25, inp_scaling=1., leak_range=(0.1,0.3),
-                 verbose=False):
+                 verbose=False, seed=None):
         self.n_inputs = n_inputs
         self.n_neurons = n_neurons
         self.rhow = rhow
         self.inp_scaling = inp_scaling
         self.leak_range = leak_range
 
-        # initialize weight matrices
-        #self.win = np.ones()
+        # RNG: default to the GLOBAL numpy RNG (seed=None) so the characterization goldens
+        # reproduce; pass seed= for a self-contained, reproducible draw that does not depend on
+        # external np.random.seed() ordering (AUDIT.md F9).
+        rng = np.random if seed is None else np.random.default_rng(seed)
 
-
-        self.win = np.random.uniform(low=-1., high=1., size=(n_neurons, n_inputs+1)) * inp_scaling
-        self.w = np.random.random((n_neurons, n_neurons)) * 2. - 1.
+        self.win = rng.uniform(low=-1., high=1., size=(n_neurons, n_inputs+1)) * inp_scaling
+        self.w = rng.random((n_neurons, n_neurons)) * 2. - 1.
         leak_low, leak_high = leak_range
-        self.leak = np.random.uniform(low=leak_low, high=leak_high, size=(n_neurons,))
+        self.leak = rng.uniform(low=leak_low, high=leak_high, size=(n_neurons,))
 
         # set spectral radius
         rhow_current = self.spectral_radius
@@ -67,7 +80,10 @@ class Reservoir:
             return X
 
     def collect_states_batch(self, U):
-        """Vectorized state collection over a batch of windows (Phase 5, ~B× faster).
+        """Vectorized state collection over a batch of windows (Phase 5).
+
+        One GEMM per timestep across the batch instead of B per-window matvecs. Speedup is modest
+        and batch-size dependent (≈1.5 to 2×; can be slower for some B/N, see _batch.py).
 
         U : [B, T, n_inputs] -> states [B, T, n_neurons]. Equivalent (within float tolerance)
         to ``np.stack([self.forward(u, collect_states=True) for u in U])``.
@@ -142,7 +158,7 @@ class Reservoir2:
         
 class Reservoir3:
     def __init__(self, n_inputs, n_neurons, rhow=1.25, inp_scaling=1., leak_range=(0.1, 0.3),
-                 sigma=1.0, verbose=False):
+                 sigma=1.0, verbose=False, seed=None):
         self.n_inputs = n_inputs
         self.n_neurons = n_neurons
         self.rhow = rhow
@@ -150,15 +166,19 @@ class Reservoir3:
         self.leak_range = leak_range
         self.sigma = sigma
 
+        # RNG: default to the GLOBAL numpy RNG (seed=None) to preserve goldens; pass seed= for a
+        # self-contained reproducible draw (AUDIT.md F9).
+        rng = np.random if seed is None else np.random.default_rng(seed)
+
         # Initialize input weight matrix with random values
-        self.win = np.random.uniform(low=-1., high=1., size=(n_neurons, n_inputs + 1)) * inp_scaling
+        self.win = rng.uniform(low=-1., high=1., size=(n_neurons, n_inputs + 1)) * inp_scaling
 
         # Initialize reservoir weight matrix with Gaussian distribution
-        self.w = np.random.normal(loc=0.0, scale=sigma, size=(n_neurons, n_neurons))
+        self.w = rng.normal(loc=0.0, scale=sigma, size=(n_neurons, n_neurons))
 
         # Set leak rates as random values in the given range
         leak_low, leak_high = leak_range
-        self.leak = np.random.uniform(low=leak_low, high=leak_high, size=(n_neurons,))
+        self.leak = rng.uniform(low=leak_low, high=leak_high, size=(n_neurons,))
 
         # Set spectral radius
         rhow_current = self.spectral_radius
@@ -196,28 +216,24 @@ class Reservoir3:
             return X
 
 
-# ---------------------------------------------------------------------------
 # Descriptive aliases for the connectivity each legacy class implements
-# ---------------------------------------------------------------------------
-FullyConnectedReservoir = Reservoir   # dense random-uniform recurrent weights
 RingReservoir = Reservoir2            # bidirectional ring / cyclic topology
 GaussianReservoir = Reservoir3        # dense Gaussian recurrent weights
 
 
 class ErdosRenyiReservoir:
-    """Sparse Erdős–Rényi reservoir (the classic sparse ESN; Jaeger 2001).
+    """Sparse Erdős-Rényi reservoir (the classic sparse ESN; Jaeger 2001).
 
     Each ordered pair (i, j), i != j, gets a recurrent connection with probability
     ``density``; present weights are drawn uniformly from [-1, 1]; the matrix is then
-    rescaled to spectral radius ``rhow``. This is the genuine Erdős–Rényi connectivity
+    rescaled to spectral radius ``rhow``. This is the genuine Erdős-Rényi connectivity
     the ``handson_erdos_renyi`` experiment was meant to use (it had silently fallen
     back to the dense ``Reservoir``), and it fulfils the intent of the broken
     ``reservoir_ramiro.py`` import ``from reservoirs.ErdosRenyi import ...``.
 
-    Mirrors the rest of the random family, plus:
-      density : float in (0, 1]  — Erdős–Rényi edge probability p.
-      seed    : Optional[int]    — RNG seed (uses ``np.random.default_rng`` for
-                                   reproducibility; the legacy classes use the global RNG).
+    Mirrors the rest of the random family, plus two extra arguments. ``density`` is the
+    Erdős-Rényi edge probability p, a float in (0, 1]. ``seed`` is an optional int RNG seed
+    (it uses ``np.random.default_rng`` for reproducibility; the legacy classes use the global RNG).
     """
 
     def __init__(self, n_inputs, n_neurons, rhow=1.25, inp_scaling=1.,
@@ -238,7 +254,7 @@ class ErdosRenyiReservoir:
         leak_low, leak_high = leak_range
         self.leak = rng.uniform(low=leak_low, high=leak_high, size=(n_neurons,))
 
-        # sparse Erdős–Rényi recurrent matrix
+        # sparse Erdős-Rényi recurrent matrix
         mask = rng.random((n_neurons, n_neurons)) < density
         weights = rng.uniform(-1., 1., size=(n_neurons, n_neurons))
         w = weights * mask

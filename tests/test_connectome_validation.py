@@ -57,3 +57,32 @@ def test_rhow_alias_deprecation_warns():
     from reservoirs.connectome import ConnectomeReservoir
     with pytest.warns(DeprecationWarning):
         ConnectomeReservoir(4, graph_dir=GRAPH, rhow=0.9)
+
+
+# fit()/predict() ridge readout: previously had ZERO coverage (AUDIT.md F11)
+
+def test_fit_predict_learns_a_linear_function_of_inputs():
+    rng = np.random.default_rng(0)
+    T = 400
+    U = np.sin(np.arange(T * 4).reshape(T, 4) / 5.0) + rng.standard_normal((T, 4)) * 0.05
+    Y = (0.6 * U[:, 0] + 0.4 * np.roll(U[:, 1], 2)).reshape(-1, 1)  # reservoir-learnable target
+    r = _cr(graph_dir=GRAPH, spectral_radius=0.9, seed=7).fit(U, Y, washout=50, ridge=1e-3)
+    pred = r.predict(U, washout=50)
+    yt = Y[50:]
+    assert pred.shape == yt.shape
+    assert np.mean((pred - yt) ** 2) < 0.2 * np.var(yt)   # fits far better than predicting the mean
+
+
+def test_predict_before_fit_raises():
+    with pytest.raises(RuntimeError, match="fit"):
+        _cr(adjacency=np.ones((10, 10)), spectral_radius=0.9).predict(np.zeros((5, 4)))
+
+
+def test_missing_edge_attr_with_real_weights_warns():
+    # On the committed real connectomes the requested `weight` attr is absent but
+    # `number_of_fibers` IS present, so the engine must warn instead of silently going binary (F1).
+    real = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir,
+                                         "data", "connectomes", "scale83"))
+    from reservoirs.connectome import ConnectomeReservoir
+    with pytest.warns(UserWarning, match="UNWEIGHTED"):
+        ConnectomeReservoir(4, graph_dir=real, spectral_radius=0.9)

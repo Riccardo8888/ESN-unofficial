@@ -1,8 +1,9 @@
 """TDD: vectorized batched state collection must match the per-window forward loop.
 
-Phase 5 adds `collect_states_batch(U)` (U: [B, T, n_inputs] -> states [B, T, N]) that processes all
-B windows in parallel via GEMM. It does NOT replace the golden-pinned `forward`; it must reproduce
-the same dynamics (within float tolerance) while being much faster for many windows.
+Phase 5 adds `collect_states_batch(U)` (U: [B, T, n_inputs] -> states [B, T, N]), which processes
+all B windows in parallel via GEMM. It does not replace the golden-pinned `forward`: it has to
+reproduce the same dynamics (within float tolerance) while running much faster when there are many
+windows.
 """
 import os
 import sys

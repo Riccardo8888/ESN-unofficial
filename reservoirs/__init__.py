@@ -1,5 +1,5 @@
 """
-reservoirs — frozen reservoir-computing substrates for the continuous-learning package.
+reservoirs: frozen reservoir-computing substrates for the continuous-learning package.
 
 Engines (recurrent weights are fixed; only a downstream readout learns):
   - random.py     : Reservoir / RingReservoir / GaussianReservoir / ErdosRenyiReservoir
@@ -13,7 +13,6 @@ from .random import (
     Reservoir,
     Reservoir2,
     Reservoir3,
-    FullyConnectedReservoir,
     RingReservoir,
     GaussianReservoir,
     ErdosRenyiReservoir,
@@ -24,7 +23,6 @@ __all__ = [
     "Reservoir",
     "Reservoir2",
     "Reservoir3",
-    "FullyConnectedReservoir",
     "RingReservoir",
     "GaussianReservoir",
     "ErdosRenyiReservoir",

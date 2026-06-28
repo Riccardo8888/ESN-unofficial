@@ -1,8 +1,8 @@
 """End-to-end smoke test of the slither.io pipeline on the committed mock fixtures.
 
-Replaces the self-contained `humand_data_1015_slither_copy.ipynb` smoke notebook: runs the
+Replaces the self-contained `humand_data_1015_slither_copy.ipynb` smoke notebook: it runs the
 whole pipeline (load -> features -> windows -> connectome reservoir -> ridge -> metrics) on
-`data/mock_user_*` + `generated_artifacts/graphs/mock_connectome.graphml`, with NO private data.
+`data/mock_user_*` and `generated_artifacts/graphs/mock_connectome.graphml`, with no private data.
 """
 import os
 import sys
@@ -45,3 +45,20 @@ def test_slither_pipeline_end_to_end():
     aa, ba = slither.angle_accuracy(pred, y_te), slither.boost_accuracy(pred, y_te)
     assert 0.0 <= aa <= 1.0 and 0.0 <= ba <= 1.0
     assert np.isfinite(np.mean((pred - y_te) ** 2))
+
+
+def test_mock_is_leaked_no_reservoir_baseline_is_high():
+    """Codifies AUDIT.md F4: the mock label is recoverable from the prev-heading features without
+    a reservoir, so mock accuracy is not modelling evidence. The no-reservoir baseline is high
+    (and in practice beats the reservoir), so we assert it clears a generous floor."""
+    import slither
+    from slither.config import WINDOW_LEN, WINDOW_STRIDE
+
+    data, graph = Path(REPO) / "data", Path(REPO) / "generated_artifacts" / "graphs"
+    slither.ensure_mock_graph(graph)
+    slither.ensure_mock_data(data)
+    X_list, y_list, _ = slither.load_all_sessions(data)
+    u, y, _ = slither.make_windows(X_list, y_list, WINDOW_LEN, WINDOW_STRIDE)
+    baseline = slither.leaked_feature_baseline(u, y)   # NO reservoir, last 2 features only
+    # 17 angle classes => chance ~0.06; a no-reservoir ridge on the leaked features clears it by far.
+    assert baseline > 0.4, f"expected the mock to be heavily leaked, baseline={baseline:.3f}"

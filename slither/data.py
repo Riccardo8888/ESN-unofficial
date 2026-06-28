@@ -152,12 +152,12 @@ def make_windows(X_list, y_list, window_len=WINDOW_LEN, stride=WINDOW_STRIDE):
 
 def train_test_split_windows(u, y, session_ids, test_ratio=TEST_RATIO, seed=7,
                              group_by_session=True):
-    """Split windows into train/test.
+    """Split windows into train and test sets.
 
-    group_by_session=True (default, Phase 4) holds out whole sessions — the leakage-free
-    protocol. Set group_by_session=False to reproduce the ORIGINAL behavior, which shuffles
-    individual windows and therefore leaks overlapping windows (stride < window_len) across
-    the split, optimistically biasing test metrics.
+    With group_by_session=True (the default since Phase 4), whole sessions are held out, which
+    keeps the split leakage-free. With group_by_session=False you get the original behavior:
+    individual windows are shuffled, so overlapping windows (when stride < window_len) leak
+    across the split and bias the test metrics optimistically.
     """
     rng_local = np.random.default_rng(seed)
     if group_by_session:
@@ -169,6 +169,16 @@ def train_test_split_windows(u, y, session_ids, test_ratio=TEST_RATIO, seed=7,
             )
         rng_local.shuffle(uniq)
         n_test = max(1, int(len(uniq) * test_ratio))
+        effective = n_test / len(uniq)
+        if abs(effective - test_ratio) > 0.1:
+            import warnings
+            warnings.warn(
+                f"group_by_session split holds out {n_test}/{len(uniq)} sessions "
+                f"(~{effective:.0%}), which differs materially from test_ratio={test_ratio:.0%} "
+                f"because whole sessions are indivisible (e.g. 2 sessions always split 50/50). "
+                f"Add more sessions for a split closer to test_ratio.",
+                UserWarning, stacklevel=2,
+            )
         test_sessions = set(uniq[:n_test].tolist())
         test_mask = np.array([s in test_sessions for s in session_ids])
         train_idx = np.sort(np.where(~test_mask)[0])

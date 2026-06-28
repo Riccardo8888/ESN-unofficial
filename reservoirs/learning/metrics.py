@@ -1,4 +1,4 @@
-"""Continual-learning metrics — pure functions of the R accuracy matrix.
+"""Continual-learning metrics: pure functions of the R accuracy matrix.
 
 R[i, j] = test accuracy on task j after training through task i (row = stage, col = task).
 References: Lopez-Paz & Ranzato (2017, GEM) for ACC/BWT/FWT; Chaudhry et al. (2018, RWalk)

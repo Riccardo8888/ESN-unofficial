@@ -68,7 +68,7 @@ def test_continual_learning_is_forgetting_free():
     """The conceptor representation is the forgetting-free part: each class's conceptor and its
     evidence are a pure function of that class's data, so learning a LATER class cannot alter
     them (unlike a shared readout, which would drift). (Multi-class *decisions* can still shift
-    as competitors are added — that is the separate class-incremental difficulty.)"""
+    as competitors are added, which is the separate class-incremental difficulty.)"""
     from reservoirs.learning.continual import ConceptorClassifier
     A, B = _gen(range(0, 5), seed=1), _gen(range(5, 10), seed=2)
     clf = ConceptorClassifier(aperture=4.0)

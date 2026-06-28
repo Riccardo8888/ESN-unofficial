@@ -1,11 +1,11 @@
 """Null-model connectomes for the connectome-RC baseline.
 
 `rewire_degree_preserving` produces a degree-preserving randomized version of a connectome
-(Maslov-Sneppen double-edge-swap on the binary topology, with the original edge weights
+(a Maslov-Sneppen double-edge-swap on the binary topology, with the original edge weights
 re-assigned). Comparing the real connectome against an ensemble of these nulls is the standard
-test of whether the empirical *topology* (not just its degree/weight distribution) carries the
-benefit — the headline experiment for any connectome reservoir-computing claim
-(cf. Suárez et al. 2024). See examples/07_null_model_baseline.ipynb.
+test of whether the empirical topology, not just its degree and weight distribution, carries the
+benefit. It is the experiment any connectome reservoir-computing claim ultimately rests on
+(cf. Suárez et al. 2024). See the null-model section of examples/combined_examples.ipynb.
 """
 import numpy as np
 import networkx as nx

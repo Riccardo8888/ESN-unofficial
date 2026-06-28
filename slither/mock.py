@@ -1,8 +1,19 @@
-"""Generate schema-compatible mock slither.io data + a mock connectome, so the
-pipeline runs end-to-end on a fresh clone without the private scraper data.
+"""Generate schema-compatible mock slither.io data and a mock connectome, so the
+pipeline runs end to end on a fresh clone without the private scraper data.
 
 The committed `data/mock_user_*/session_*` and `generated_artifacts/graphs/mock_connectome.graphml`
-were produced by these functions; they are idempotent (no-ops if data already exists).
+were produced by these functions. They are idempotent: nothing happens if the data already exists.
+
+LEAKAGE WARNING. The mock is not evidence; see docs/AUDIT.md F4. It is deliberately simple and
+heavily leaked, in two ways. First, the heading is a smooth random walk and the angle label is
+essentially the previous-step heading, so the `prev_sin`/`prev_cos` input features predict the
+label with no reservoir at all. A no-reservoir ridge on those two features alone scores ~0.6 angle
+accuracy (17 classes, chance ~0.06), comparable to the connectome reservoir; on the leakage-free
+session-grouped split (only 3 mock sessions) both are highly split-dependent, and the baseline
+often matches or beats the reservoir (for example 0.74 vs 0.69 on the split where the reservoir
+does best). Second, the boost label is `velocity > 110`, and velocity is an input feature, so
+boost is ~100% recoverable by a threshold. Use `slither.leaked_feature_baseline(...)` to print the
+no-reservoir baseline next to any mock number. Real scraper data is required for any modelling claim.
 """
 import json
 from pathlib import Path

@@ -91,7 +91,7 @@ def test_classifier_separates_blobs_and_requires_classes():
     y = np.repeat([0, 1, 2], 60)
 
     clf = OnlineReadout()
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError, match="classes"):
         clf.partial_fit(X, y)             # must declare classes on first call
     clf.partial_fit(X, y, classes=[0, 1, 2])
     assert list(clf.classes_) == [0, 1, 2]

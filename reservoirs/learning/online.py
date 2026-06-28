@@ -3,7 +3,7 @@
 The reservoir is frozen; only these readout weights adapt, one sample at a time via
 ``partial_fit``. RLS is exact recursive least squares with a forgetting factor and a ridge
 seed (P0 = I/ridge ⇔ Tikhonov penalty `ridge·‖w‖²`). The inverse-correlation matrix is
-re-symmetrised each step — a lightweight guard against roundoff drift, NOT the full
+re-symmetrised each step, a lightweight guard against roundoff drift, NOT the full
 square-root/UD-factored form or the state-noise injection discussed in the design doc (those
 remain future work). See ../../docs/CONTINUOUS_LEARNING_DESIGN.md.
 """
@@ -13,12 +13,11 @@ import numpy as np
 class RLSReadout:
     """Multi-output linear readout trained online.
 
-    Parameters
-    ----------
-    method : {'rls','lms','nlms'}   (default 'rls')
-    forgetting : RLS forgetting factor λ ∈ (0,1]   (1 = infinite memory)
-    ridge : Tikhonov strength δ; RLS seeds P0 = I/δ
-    mu : (N)LMS step size
+    Parameters:
+        method : {'rls','lms','nlms'} (default 'rls')
+        forgetting : RLS forgetting factor λ ∈ (0,1] (1 = infinite memory)
+        ridge : Tikhonov strength δ; RLS seeds P0 = I/δ
+        mu : (N)LMS step size
     """
 
     def __init__(self, n_features, n_outputs, method="rls",
